@@ -1,0 +1,1079 @@
+# PROJECT: GHOSH TRAVELS – PROFESSIONAL CAR & COACH RENTAL WEBSITE
+
+Act as a senior UI/UX designer, full-stack web developer, and automotive website specialist.
+
+Build a complete, professional, modern, premium, fully responsive car and coach rental website for **GHOSH TRAVELS**, based in Kolkata, West Bengal, India.
+
+Official website reference: https://ghoshtravels.com/
+
+Use the uploaded screenshot of the existing Ghosh Travels website as the primary visual design reference. Recreate its overall visual identity, layout style, color scheme, typography hierarchy, and premium automotive presentation while improving the design, functionality, user experience, and responsiveness.
+
+IMPORTANT: This is exclusively a CAR AND COACH RENTAL BUSINESS. Do not introduce tyre sales, tyre repairs, batteries, automobile servicing, or any unrelated automotive services.
+
+---
+
+# 1. BRAND IDENTITY & DESIGN SYSTEM
+
+Brand Name: GHOSH TRAVELS
+
+Tagline: Try It! Ride It! Enjoy It!
+
+Business Category: Luxury Car Rental, Premium Car Rental, Corporate Car Rental, Wedding Car Rental, Mini Bus Rental and Luxury Coach Rental.
+
+Location:
+46, Raja Dinendra Street, Maniktala, Kolkata – 700009, West Bengal, India.
+
+Contact:
+- +91-9874955056
+- +91-33-23520070
+- travelindia46@gmail.com
+
+Management: Mr. Partha Ghosh.
+
+## Visual Design Direction
+
+Use the uploaded screenshot as the primary reference.
+
+Maintain the following visual characteristics:
+
+COLOR PALETTE:
+- Primary Yellow/Gold: #FFD21F
+- Secondary Gold: #E9AD18
+- Black: #151515
+- Charcoal: #242424
+- White: #FFFFFF
+- Light Grey: #F4F4F4
+- Text Grey: #777777
+
+DESIGN STYLE:
+- Premium automotive and luxury travel aesthetics.
+- Black and yellow/gold branding.
+- Large, bold, impactful headings.
+- High-quality, realistic car and coach photography.
+- Modern card-based layouts.
+- Smooth transitions and subtle hover animations.
+- Clean spacing and professional typography.
+- Rounded corners with subtle shadows.
+- Elegant black backgrounds with yellow highlights.
+- Premium full-width vehicle banners.
+
+TYPOGRAPHY:
+Use Poppins or Montserrat for headings and Inter for body text.
+
+HEADER:
+Create a professional sticky navigation bar.
+
+Top utility strip:
+- Left: "Try It! Ride It! Enjoy It!"
+- Right: Email and Contact shortcuts.
+
+Main navigation:
+- Ghosh Travels logo (use the provided logo if available).
+- Home
+- About Us
+- Car Rental Services (dropdown)
+- Tariff
+- Book Your Cab
+- Contact Us
+
+Use a black navigation background with yellow highlights and a prominent yellow "Book Your Cab" CTA button.
+
+The header must be responsive with a mobile hamburger menu.
+
+---
+
+# 2. WEBSITE STRUCTURE & PAGES
+
+Build the following complete website architecture.
+
+1. Home
+2. About Us
+3. Car Rental Services
+4. Luxury Coach Rental
+5. Mini Bus Rental
+6. Corporate Car Booking
+7. Luxury Car Rental
+8. Premium Car Rental
+9. Wedding Car Rental
+10. Tariff
+11. Book Your Cab
+12. Contact Us
+13. Career
+14. Blog
+15. Terms & Conditions
+16. Privacy Policy
+17. Disclaimer
+18. Refund Policy
+
+Every page must have a consistent header, footer, branding, navigation and responsive design.
+
+---
+
+# 3. HOMEPAGE DESIGN
+
+Create a premium homepage inspired by the uploaded screenshot.
+
+## Section 1: Hero Banner
+
+Create a large, visually striking automotive hero slider.
+
+Use high-resolution images of luxury vehicles, premium sedans, SUVs and luxury coaches.
+
+Main headline:
+
+"GET THE BEST
+LUXURY CAR FOR RENT"
+
+Supporting text:
+
+"Experience comfort, elegance and convenience with Kolkata's trusted car and coach rental service."
+
+Primary CTA: BOOK YOUR CAR
+
+Secondary CTA: EXPLORE OUR FLEET
+
+Use:
+- Large bold black typography.
+- Yellow-highlighted words.
+- Premium vehicle image on the right.
+- Light grey/white city-inspired background.
+- Yellow geometric design accents.
+- Animated slider indicators.
+
+Hero slider should have 3 slides:
+1. Luxury Car Rental
+2. Premium Car Rental
+3. Luxury Coach & Bus Rental
+
+## Section 2: Featured Rental Categories
+
+Create attractive service cards with vehicle images.
+
+Cards:
+
+1. Luxury Car Rental
+   Executive cars for premium travel experiences.
+
+2. Premium Car Rental
+   Comfortable and stylish cars for everyday and business travel.
+
+3. Luxury Coach Rental
+   Premium AC coaches for group journeys and events.
+
+4. Mini Bus Rental
+   Spacious vehicles for family trips, corporate tours and group travel.
+
+5. Corporate Car Booking
+   Professional transportation solutions for businesses.
+
+6. Wedding Car Rental
+   Elegant luxury cars for memorable wedding celebrations.
+
+Each card should contain:
+- High-quality vehicle image.
+- Service title.
+- Short description.
+- View Details button.
+- Enquire Now button.
+
+Each card must navigate to its corresponding service detail page.
+
+## Section 3: Welcome to Ghosh Travels
+
+Use a two-column layout.
+
+Left:
+Premium image showing a professional chauffeur or luxury vehicle.
+
+Right:
+Heading: "Welcome to Ghosh Travels"
+
+Content:
+
+"Ghosh Travels, a reliable car rental service provider in Kolkata, offers you the best ride at the most comfortable rates. For the best car rental service in Kolkata, call us immediately and we are here to communicate with you as soon as possible.
+
+We have a tie-up with Government-sponsored agencies and B2C companies to rent cars. You can compare us with the top car rental companies in Kolkata. We have the pride to outrank our competitors to emerge as a brand vehicle renting company in India.
+
+Mr. Partha Ghosh manages all our fleets to give you the best transportation support. We have the bright vision of modernizing our car rental services in Kolkata to assist you in having cost-effective car rental solutions."
+
+CTA: KNOW MORE ABOUT US
+
+## Section 4: Why Choose Ghosh Travels?
+
+Create 4–6 feature cards with icons:
+
+- Wide Range of Vehicles
+- Experienced Chauffeurs
+- Affordable Rental Packages
+- Corporate Transportation Solutions
+- Reliable Customer Support
+- Comfortable & Safe Journeys
+
+## Section 5: Popular Rental Services
+
+Display visually attractive vehicle/service cards for:
+- Luxury Cars
+- Premium Sedans
+- SUVs and MUVs
+- Wedding Cars
+- Mini Buses
+- Luxury Coaches
+
+Include a "View All Services" button.
+
+## Section 6: Popular Travel Destinations
+
+Create attractive destination cards featuring:
+
+- Digha
+- Mandarmani
+- Puri
+- Tarapith
+
+Each card should have destination imagery and an "Enquire for Trip" button that opens the booking form with the destination preselected.
+
+## Section 7: Customer Testimonials
+
+Create a professional testimonial slider with customer reviews, names and ratings.
+
+Do not fabricate real customer identities or claim unverified reviews. Use clearly labelled sample placeholders until genuine testimonials are supplied.
+
+## Section 8: Quick Enquiry
+
+Create a premium enquiry section with:
+- Name
+- Email
+- Phone Number
+- Rental Service
+- Travel Date
+- Pickup Location
+- Message
+
+Submit button: SEND ENQUIRY.
+
+## Section 9: Footer
+
+Create a professional multi-column footer.
+
+Column 1: Ghosh Travels logo, short company description and tagline.
+
+Column 2: Quick Links
+- About Us
+- Car Rental Services
+- Tariff
+- Book Your Cab
+- Career
+- Blog
+- Contact Us
+
+Column 3: Our Services
+- Luxury Car Rental
+- Premium Car Rental
+- Wedding Car Rental
+- Mini Bus Rental
+- Luxury Coach Rental
+- Corporate Car Booking
+
+Column 4: Connect With Us
+- Address
+- Phone numbers
+- Email
+- Social media icons
+
+Bottom footer:
+Terms & Conditions | Privacy Policy | Disclaimer | Refund Policy
+
+Copyright:
+© 2026 Ghosh Travels. All Rights Reserved.
+
+Add a floating WhatsApp enquiry button.
+
+---
+
+# 4. CAR RENTAL SERVICES – MAIN PAGE
+
+Create a dedicated Car Rental Services landing page.
+
+Page heading:
+"OUR CAR & COACH RENTAL SERVICES"
+
+Subtitle:
+"Explore our wide range of premium vehicles and professional transportation solutions."
+
+Display all six services in an attractive responsive grid.
+
+Each service card must include:
+- Large vehicle photograph.
+- Service name.
+- Description.
+- Vehicle types.
+- Key features.
+- View Details button.
+- Enquire Now button.
+
+Services:
+
+1. Luxury Coach Rental
+2. Mini Bus Rental
+3. Corporate Car Booking
+4. Luxury Car Rental
+5. Premium Car Rental
+6. Wedding Car Rental
+
+Each service should have its own independent, detailed page.
+
+---
+
+# 5. INDIVIDUAL SERVICE DETAIL PAGES
+
+IMPORTANT: These pages must not be generic duplicates. Each service page must have relevant content, vehicle imagery, features, passenger capacity and its own enquiry form.
+
+## PAGE 1: LUXURY COACH RENTAL
+
+Reference:
+https://ghoshtravels.com/services/details/1679091c5a880faf6fb5e6087eb1b2dc/
+
+Hero Heading:
+"LUXURY COACH RENTAL IN KOLKATA"
+
+Description:
+"Travel together in comfort and style with our premium luxury coach rental services. We provide comfortable, spacious and well-equipped coaches for group travel, corporate events, tours and special occasions."
+
+Vehicle Categories:
+- Chartered AC Volvo Sleeper Coaches
+- Capsule Buses
+- Mid-size Luxury Coaches
+- Coaches accommodating up to 50 passengers
+
+Features:
+- Air-conditioned travel.
+- Spacious seating arrangements.
+- Group transportation.
+- Suitable for corporate events.
+- Outstation travel.
+- Professional transportation support.
+
+Add a vehicle gallery.
+
+Enquiry fields:
+- Name
+- Phone
+- Email
+- Travel Date
+- Pickup Location
+- Destination
+- Number of Passengers
+- Journey Type
+- Special Requirements
+
+CTA: ENQUIRE FOR LUXURY COACH
+
+## PAGE 2: MINI BUS RENTAL
+
+Reference:
+https://ghoshtravels.com/services/details/8f14e45fceea167a5a36dedd4bea2543/
+
+Hero Heading:
+"MINI BUS & TEMPO TRAVELLER RENTAL"
+
+Description:
+"Choose our mini bus rental services for comfortable group journeys, family outings, corporate transportation, sightseeing and outstation trips."
+
+Available Vehicles:
+- 16 Seater AC / Non-AC Tempo Traveller
+- 20 Seater AC / Non-AC Tempo Traveller
+- 26 Seater AC / Non-AC Tempo Traveller
+- 13 Seater Tata Winger
+- Maruti Vans
+
+Features:
+- Multiple seating options.
+- AC and Non-AC options.
+- Ideal for group tours.
+- Family and corporate travel.
+- Outstation transportation.
+
+Enquiry fields:
+- Name
+- Phone
+- Email
+- Preferred Vehicle
+- Travel Date
+- Pickup Location
+- Destination
+- Number of Passengers
+- AC / Non-AC Preference
+- Journey Type
+- Message
+
+CTA: BOOK A MINI BUS
+
+## PAGE 3: CORPORATE CAR BOOKING
+
+Reference:
+https://ghoshtravels.com/services/details/c9f0f895fb98ab9159f51fd0297e236d/
+
+Hero Heading:
+"CORPORATE CAR RENTAL & FLEET MANAGEMENT"
+
+Description:
+"Professional corporate transportation solutions designed for businesses, organisations and institutions. Ghosh Travels provides executive transport, fleet management and dedicated vehicle arrangements."
+
+Services:
+- Corporate fleet management.
+- Executive car booking.
+- VIP delegate transportation.
+- Seminar and conference transportation.
+- Employee pickup and drop.
+- Business meetings and events.
+
+Vehicle Options:
+- Executive Sedans.
+- Premium Sedans.
+- SUVs and MUVs.
+- Luxury Cars.
+
+Enquiry fields:
+- Company Name
+- Contact Person
+- Designation
+- Phone
+- Email
+- Required Vehicles
+- Number of Vehicles
+- Service Duration
+- Pickup / Service Location
+- Transportation Requirements
+
+CTA: REQUEST CORPORATE QUOTATION
+
+## PAGE 4: LUXURY CAR RENTAL
+
+Reference:
+https://ghoshtravels.com/services/details/eccbc87e4b5ce2fe28308fd9f2a7baf3/
+
+Hero Heading:
+"EXPERIENCE LUXURY CAR RENTAL"
+
+Description:
+"Experience sophisticated travel with our luxury chauffeur-driven car rental services. Choose from premium executive vehicles for business travel, personal occasions and special journeys."
+
+Featured Vehicles:
+- BMW 5 Series
+- BMW 7 Series
+- Audi A6
+- Audi Q7
+- Mercedes-Benz E-Class
+
+Features:
+- Luxury interiors.
+- Executive travel experience.
+- Chauffeur-driven transportation.
+- Ideal for VIP guests and special events.
+- Professional travel arrangements.
+
+Enquiry fields:
+- Name
+- Phone
+- Email
+- Preferred Luxury Car
+- Travel Date
+- Pickup Location
+- Destination
+- Rental Duration
+- Journey Type
+- Message
+
+CTA: ENQUIRE FOR LUXURY CARS
+
+## PAGE 5: PREMIUM CAR RENTAL
+
+Reference:
+https://ghoshtravels.com/services/details/a87ff679a2f3e71d9181a67b7542122c/
+
+Hero Heading:
+"PREMIUM CAR RENTAL SERVICES"
+
+Description:
+"Enjoy reliable, comfortable and stylish travel with our premium car rental solutions. We offer a range of quality vehicles for local travel, airport transfers, outstation trips and personal transportation."
+
+Featured Vehicles:
+- Swift Dzire
+- Honda City
+- Toyota Corolla Altis
+- Toyota Camry
+- Skoda
+- Ambassador
+
+Features:
+- Comfortable seating.
+- Professional chauffeur service.
+- Local and outstation bookings.
+- Airport and railway station transfers.
+- Personal and business travel.
+
+Enquiry fields:
+- Name
+- Phone
+- Email
+- Preferred Vehicle
+- Travel Date
+- Pickup Location
+- Destination
+- Rental Type
+- Number of Passengers
+- Message
+
+CTA: BOOK A PREMIUM CAR
+
+## PAGE 6: WEDDING CAR RENTAL
+
+Reference:
+https://ghoshtravels.com/services/details/e4da3b7fbbce2345d7772b0674a318d5/
+
+Hero Heading:
+"MAKE YOUR SPECIAL DAY MORE MEMORABLE"
+
+Description:
+"Add elegance and sophistication to your wedding celebrations with our luxury wedding car rental services. Choose premium and classic vehicles for wedding ceremonies, guest transportation and special occasions."
+
+Featured Vehicles:
+- BMW
+- Audi
+- Skoda
+- Premium Luxury Sedans
+- Vintage and Classic Rides
+
+Features:
+- Wedding transportation.
+- Luxury bridal and groom entry vehicles.
+- Decorated vehicle arrangements.
+- Guest transportation.
+- Customised booking requirements.
+
+Enquiry fields:
+- Name
+- Phone
+- Email
+- Wedding Date
+- Preferred Vehicle
+- Pickup Location
+- Venue
+- Rental Duration
+- Decoration Requirements
+- Additional Requirements
+
+CTA: PLAN YOUR WEDDING RIDE
+
+---
+
+# 6. VEHICLE SELECTION EXPERIENCE
+
+This is one of the most important features of the website.
+
+Users must be able to browse available vehicle categories, view individual vehicles and enquire about their preferred vehicle.
+
+Create a dedicated vehicle browsing interface.
+
+Vehicle categories:
+
+A. Hatchbacks & Sedans
+- Indica
+- Indigo
+- Swift Dzire
+- Honda City
+- Ambassador
+
+B. Executive Sedans
+- Toyota Corolla Altis
+- Toyota Camry
+- Skoda
+
+C. SUVs & MUVs
+- Toyota Innova
+- Toyota Fortuner
+- Mahindra Scorpio
+- Mahindra XUV
+- Tata Sumo
+
+D. Luxury Cars
+- BMW 5 Series
+- BMW 7 Series
+- Audi A6
+- Audi Q7
+- Mercedes-Benz E-Class
+
+E. Mini Buses & Coaches
+- Tata Winger 13 Seater
+- Tempo Traveller 16 Seater
+- Tempo Traveller 20 Seater
+- Tempo Traveller 26 Seater
+- Volvo Coaches
+- Luxury Coaches
+
+Every vehicle card should display:
+- High-quality vehicle photograph.
+- Vehicle name.
+- Category.
+- Seating capacity, where confirmed.
+- AC / Non-AC information, where applicable.
+- Short description.
+- View Details.
+- Enquire Now.
+
+IMPORTANT:
+Do not invent vehicle specifications, seating capacity, availability or prices where information has not been provided.
+
+For vehicles where exact details are unavailable, display "Contact for Details".
+
+Vehicle enquiry should automatically populate the selected vehicle in the booking form.
+
+---
+
+# 7. TARIFF PAGE
+
+Create a professional and easy-to-understand tariff page.
+
+Page heading:
+"CAR RENTAL TARIFF & PACKAGES"
+
+Subtitle:
+"Transparent rental packages for local journeys, airport transfers and outstation travel."
+
+## LOCAL RENTAL – 10 HOURS / 100 KM
+
+Display the following pricing:
+
+| Vehicle Category | Models | Base Tariff |
+| Hatchbacks & Sedans | Swift Dzire | ₹4,000 |
+| Executive Sedans | Toyota Corolla Altis, Toyota Camry, Skoda | ₹6,500 – ₹8,000 |
+| SUVs & MUVs | Innova, Fortuner, Scorpio, XUV, Tata Sumo | Custom / Route Based |
+| Luxury Cars | BMW 5 Series, Audi A6/Q7, Mercedes E-Class, BMW 7 Series | ₹16,000 – ₹24,000 |
+| Mini Buses & Coaches | Tempo Travellers, Volvo & Luxury Coaches | Contact for Tariff |
+
+Clearly mention:
+"Prices displayed are indicative base tariffs for the specified local package. Final quotations may vary depending on vehicle selection, route, duration and travel requirements."
+
+## AIRPORT & RAILWAY TRANSFERS
+
+Create a separate section for:
+- Kolkata Airport Transfers.
+- Howrah Railway Station Transfers.
+- Sealdah Railway Station Transfers.
+
+CTA: ENQUIRE FOR TRANSFER
+
+## OUTSTATION RENTAL
+
+Create a section featuring:
+- Digha
+- Mandarmani
+- Puri
+- Tarapith
+
+Display "Request a Quote" instead of inventing prices.
+
+Add a tariff enquiry form:
+- Name
+- Phone
+- Vehicle Category
+- Pickup Location
+- Destination
+- Travel Date
+- Return Date
+- Number of Passengers
+
+CTA: GET CUSTOM QUOTATION
+
+---
+
+# 8. BOOK YOUR CAB – INTERACTIVE BOOKING PAGE
+
+Reference:
+https://ghoshtravels.com/booking/
+
+Create a professional booking portal with a clean, step-by-step interface.
+
+Page Heading:
+"BOOK YOUR RIDE WITH GHOSH TRAVELS"
+
+Subtitle:
+"Select your preferred vehicle, share your journey details and get a customised rental quotation."
+
+## STEP 1: SELECT JOURNEY TYPE
+
+Provide interactive options:
+- Local Rental
+- Airport Transfer
+- Railway Station Transfer
+- Outstation Trip
+- Corporate Booking
+- Wedding Booking
+
+## STEP 2: SELECT VEHICLE CATEGORY
+
+Options:
+- Hatchback
+- Sedan
+- Premium Sedan
+- SUV / MUV
+- Luxury Car
+- Mini Bus
+- Tempo Traveller
+- Luxury Coach
+
+## STEP 3: JOURNEY DETAILS
+
+Fields:
+- Pickup Location
+- Destination
+- Pickup Date
+- Pickup Time
+- Return Date
+- Number of Passengers
+- One Way / Round Trip
+
+For outstation bookings, provide destination suggestions:
+- Digha
+- Mandarmani
+- Puri
+- Tarapith
+- Other Destination
+
+## STEP 4: CUSTOMER INFORMATION
+
+Fields:
+- Full Name
+- Mobile Number
+- Email Address
+- Additional Requirements
+
+## STEP 5: BOOKING SUMMARY
+
+Display all selected information in a clean booking summary.
+
+Provide buttons:
+- Edit Booking
+- Submit Enquiry
+
+On submission:
+- Validate all required fields.
+- Generate a unique enquiry reference number.
+- Display a success confirmation.
+- Save the booking details to the database.
+- Make the enquiry available in the admin dashboard.
+- Provide WhatsApp enquiry functionality.
+
+IMPORTANT:
+The booking system must be an ENQUIRY / RESERVATION REQUEST system, not an automatic payment or instant-confirmed booking system.
+
+Display:
+"Your booking request has been received. Our team will contact you shortly to confirm availability and provide the final quotation."
+
+Do not claim that a vehicle is booked or available until the company confirms it.
+
+---
+
+# 9. ABOUT US PAGE
+
+Reference:
+https://ghoshtravels.com/about/
+
+Create a professional company profile page.
+
+Sections:
+1. About Ghosh Travels.
+2. Our Journey.
+3. Our Management.
+4. Our Fleet.
+5. Our Services.
+6. Why Choose Us.
+7. Our Location with Google Maps.
+8. Quick Enquiry Form.
+
+Include Mr. Partha Ghosh as the person managing fleet operations.
+
+Use professional automotive and corporate travel photographs.
+
+---
+
+# 10. CONTACT US PAGE
+
+Create a professional contact page.
+
+Display:
+
+Ghosh Travels
+46, Raja Dinendra Street, Maniktala, Kolkata – 700009, West Bengal, India.
+
+Phone:
++91-9874955056
++91-33-23520070
+
+Email:
+travelindia46@gmail.com
+
+Include:
+- Click-to-call phone numbers.
+- Click-to-email functionality.
+- WhatsApp chat link.
+- Google Maps embed.
+- Contact enquiry form.
+- Business location details.
+
+Contact form:
+- Name
+- Email
+- Phone
+- Subject
+- Message
+
+---
+
+# 11. CAREER & BLOG PAGES
+
+CAREER:
+Reference: https://career.ghoshtravels.com/
+
+Create a professional careers page with:
+- Current Openings.
+- Digital Marketing Executive.
+- Sales Executive.
+- Job Description.
+- Application Form.
+- Resume Upload.
+- Submit Application.
+
+Clearly mark these roles as sample listings until current vacancies are verified.
+
+BLOG:
+Reference: https://blog.ghoshtravels.com/
+
+Create a blog landing page with:
+- Featured articles.
+- Travel tips.
+- Car rental guides.
+- Kolkata travel information.
+- Outstation destination guides.
+- Individual blog detail pages.
+
+Use an easy-to-manage CMS-ready layout.
+
+---
+
+# 12. QUICK ENQUIRY & WHATSAPP INTEGRATION
+
+All service pages and vehicle cards must have enquiry functionality.
+
+Every enquiry should capture:
+- Customer Name.
+- Phone Number.
+- Email.
+- Selected Service.
+- Selected Vehicle.
+- Travel Date.
+- Pickup Location.
+- Destination.
+- Additional Message.
+
+Integrate WhatsApp enquiry with the company number +919874955056.
+
+Generate a prefilled WhatsApp message containing the user's selected service and journey details.
+
+Add a floating WhatsApp icon at the bottom-right corner on all pages.
+
+Also add click-to-call functionality on mobile devices.
+
+---
+
+# 13. ADMIN DASHBOARD & BACKEND
+
+Build the application with a proper backend and database.
+
+Preferred stack:
+- Frontend: React with TypeScript.
+- Styling: Tailwind CSS.
+- Backend: Firebase.
+- Database: Firestore.
+- Authentication: Firebase Authentication.
+- Image storage: Firebase Storage.
+
+Create a secure admin dashboard.
+
+Admin capabilities:
+
+1. Dashboard Overview
+   - Total Enquiries.
+   - New Enquiries.
+   - Pending Enquiries.
+   - Confirmed Bookings.
+   - Completed Bookings.
+
+2. Enquiry Management
+   - View customer enquiries.
+   - View selected vehicle and service.
+   - View journey details.
+   - Update enquiry status.
+   - Add internal notes.
+   - Contact customer.
+
+3. Vehicle Management
+   - Add new vehicles.
+   - Edit vehicle information.
+   - Upload vehicle photographs.
+   - Manage vehicle categories.
+   - Enable / disable vehicle listings.
+
+4. Service Management
+   - Add and edit services.
+   - Update descriptions.
+   - Upload service images.
+
+5. Tariff Management
+   - Update vehicle rental rates.
+   - Update local package tariffs.
+   - Manage custom quotation information.
+
+6. Career Management
+   - Manage job openings.
+   - View job applications.
+
+7. Blog Management
+   - Create, edit and publish articles.
+
+8. Website Content Management
+   - Update homepage banners.
+   - Update contact information.
+   - Update company details.
+
+IMPORTANT:
+Secure the admin area with authentication and proper database access rules. Never expose admin credentials or private database keys in frontend code.
+
+If Firebase configuration is not provided, build the complete integration structure with clearly marked configuration placeholders and provide instructions to connect the project.
+
+---
+
+# 14. FUNCTIONAL & TECHNICAL REQUIREMENTS
+
+The website must be a real, working application, not just a static design or visual prototype.
+
+Requirements:
+
+- Fully responsive on desktop, tablet and mobile.
+- Fast page loading.
+- SEO-friendly URLs.
+- Proper page titles and meta descriptions.
+- Search-engine-friendly page structure.
+- Functional navigation and dropdowns.
+- Functional enquiry forms.
+- Form validation.
+- Database integration.
+- Image optimisation.
+- WhatsApp integration.
+- Click-to-call functionality.
+- Functional booking workflow.
+- Reusable React components.
+- Clean code architecture.
+- Loading states.
+- Success and error notifications.
+- 404 page.
+- Accessibility-friendly design.
+- Secure admin authentication.
+
+Use Indian currency formatting (₹).
+
+Use Indian mobile number formatting.
+
+Use date pickers for travel dates.
+
+All forms must have proper validation and useful error messages.
+
+Never create buttons that do nothing. Every CTA must navigate to a page, open a form, submit information or perform its stated action.
+
+---
+
+# 15. SEO REQUIREMENTS
+
+Optimise the website for relevant searches such as:
+
+- Car Rental in Kolkata.
+- Luxury Car Rental in Kolkata.
+- Premium Car Rental Kolkata.
+- Wedding Car Rental Kolkata.
+- Corporate Car Rental Kolkata.
+- Tempo Traveller Rental Kolkata.
+- Mini Bus Rental Kolkata.
+- Volvo Bus Rental Kolkata.
+- Luxury Coach Rental Kolkata.
+- Airport Car Rental Kolkata.
+- Outstation Car Rental Kolkata.
+
+Create individual SEO titles and descriptions for all service pages.
+
+Use LocalBusiness and relevant service structured data where appropriate.
+
+Maintain consistent business name, address and contact information throughout the website.
+
+---
+
+# 16. IMAGE & VISUAL ASSET REQUIREMENTS
+
+Use premium, realistic, high-resolution automotive photographs.
+
+Visual references:
+- Luxury Toyota Fortuner.
+- BMW luxury sedans.
+- Audi executive cars.
+- Mercedes-Benz luxury vehicles.
+- Premium wedding cars.
+- Volvo luxury coaches.
+- Tempo Travellers.
+- Professional chauffeurs.
+- Corporate transportation.
+
+Image guidelines:
+- Use realistic photographs, not cartoon illustrations.
+- Maintain consistent image quality.
+- Use appropriate aspect ratios.
+- Use clean backgrounds.
+- Use high-quality hero imagery.
+- Ensure text remains readable over images.
+- Avoid distorted vehicle proportions.
+- Do not display the same vehicle photograph across every service category.
+
+Use the supplied Ghosh Travels logo wherever available. Do not invent or redesign the brand identity unnecessarily.
+
+---
+
+# 17. FINAL DESIGN EXPECTATIONS
+
+The finished website should feel like a premium professional car rental company website.
+
+It should combine:
+- The black and yellow branding of the supplied screenshot.
+- Premium automotive photography.
+- Modern user interface.
+- Easy vehicle browsing.
+- Detailed individual service pages.
+- A professional tariff presentation.
+- Interactive booking and enquiry forms.
+- Reliable customer communication.
+- A scalable admin dashboard.
+
+The homepage must be visually impressive and immediately communicate that Ghosh Travels offers premium car and coach rental services in Kolkata.
+
+PRIORITY:
+1. Excellent visual design.
+2. Fully functional vehicle and service selection.
+3. Detailed individual service pages.
+4. Working enquiry and booking workflow.
+5. Mobile responsiveness.
+6. Admin and backend integration.
+
+Build the complete application, not just the homepage.
+
+Start by establishing the design system and shared components, then implement the homepage, service listing pages, individual service pages, tariff, booking portal, contact pages and admin dashboard.
+
+Ensure every page is interconnected and every CTA works.
+
+Use the uploaded screenshot as the visual reference throughout development.

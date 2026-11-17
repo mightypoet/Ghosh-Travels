@@ -1,0 +1,6 @@
+{
+  "name": "Ghosh Travels – Car & Coach Rental Kolkata",
+  "description": "Trusted luxury car, premium sedan, SUV, mini bus, wedding car, corporate fleet, and AC Volvo coach rental services in Kolkata, West Bengal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

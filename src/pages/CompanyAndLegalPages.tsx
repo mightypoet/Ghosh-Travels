@@ -41,23 +41,27 @@ export const AboutPage: React.FC = () => {
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState<EnquiryRecord | null>(null);
 
-  const handleAboutEnquiry = (e: React.FormEvent) => {
+  const handleAboutEnquiry = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || phone.replace(/[\s\-+]/g, '').length < 10) return;
-    const rec = submitEnquiry({
-      sourcePage: 'About Us Page',
-      customerName: name.trim(),
-      phone: phone.trim(),
-      email: email.trim() || 'Not Provided',
-      journeyType: 'General Consultation',
-      selectedService: service,
-      selectedVehicle: 'Fleet Consultation',
-      pickupLocation: 'Kolkata',
-      destination: 'Kolkata / Outstation',
-      travelDate: 'Upcoming',
-      message: message.trim(),
-    });
-    setSubmitted(rec);
+    try {
+      const rec = await submitEnquiry({
+        sourcePage: 'About Us Page',
+        customerName: name.trim(),
+        phone: phone.trim(),
+        email: email.trim() || 'Not Provided',
+        journeyType: 'General Consultation',
+        selectedService: service,
+        selectedVehicle: 'Fleet Consultation',
+        pickupLocation: 'Kolkata',
+        destination: 'Kolkata / Outstation',
+        travelDate: 'Upcoming',
+        message: message.trim(),
+      });
+      setSubmitted(rec);
+    } catch {
+      // ignore or keep form editable
+    }
   };
 
   return (
@@ -337,7 +341,7 @@ export const ContactPage: React.FC = () => {
   const [error, setError] = useState('');
   const [submittedRecord, setSubmittedRecord] = useState<EnquiryRecord | null>(null);
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!name.trim()) {
@@ -353,20 +357,24 @@ export const ContactPage: React.FC = () => {
       return;
     }
 
-    const rec = submitEnquiry({
-      sourcePage: 'Contact Us Page',
-      customerName: name.trim(),
-      phone: phone.trim(),
-      email: email.trim() || 'Not Provided',
-      journeyType: subject.trim() || 'Contact Form Enquiry',
-      selectedService: subject.trim() || 'General Contact',
-      selectedVehicle: 'Not Specified',
-      pickupLocation: 'Kolkata',
-      destination: 'As per message',
-      travelDate: new Date().toISOString().slice(0, 10),
-      message: message.trim(),
-    });
-    setSubmittedRecord(rec);
+    try {
+      const rec = await submitEnquiry({
+        sourcePage: 'Contact Us Page',
+        customerName: name.trim(),
+        phone: phone.trim(),
+        email: email.trim() || 'Not Provided',
+        journeyType: subject.trim() || 'Contact Form Enquiry',
+        selectedService: subject.trim() || 'General Contact',
+        selectedVehicle: 'Not Specified',
+        pickupLocation: 'Kolkata',
+        destination: 'As per message',
+        travelDate: new Date().toISOString().slice(0, 10),
+        message: message.trim(),
+      });
+      setSubmittedRecord(rec);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to submit enquiry right now.');
+    }
   };
 
   return (
@@ -889,9 +897,17 @@ export const BlogPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
             <span className="font-semibold text-[#E9AD18]">{activeArticle.category}</span>
             <span>·</span>
-            <span>{activeArticle.publishedAt}</span>
+            <span>
+              {activeArticle.created_at
+                ? new Date(activeArticle.created_at).toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: '2-digit',
+                  })
+                : 'Recent'}
+            </span>
             <span>·</span>
-            <span>{activeArticle.readTime}</span>
+            <span>{activeArticle.read_time || '4 min read'}</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-[#151515] leading-tight">
@@ -900,16 +916,19 @@ export const BlogPage: React.FC = () => {
 
           <div className="rounded-2xl overflow-hidden border border-neutral-200 aspect-16/9">
             <ResilientImage
-              src={activeArticle.image}
+              src={activeArticle.cover_image}
               alt={activeArticle.title}
               className="w-full h-full object-cover"
             />
           </div>
 
           <div className="space-y-4 text-sm sm:text-base text-neutral-700 leading-relaxed pt-2">
-            {activeArticle.content.map((para, idx) => (
-              <p key={idx}>{para}</p>
-            ))}
+            {activeArticle.content
+              .split(/\n\n+/)
+              .filter(Boolean)
+              .map((para, idx) => (
+                <p key={idx}>{para}</p>
+              ))}
           </div>
 
           <div className="mt-10 p-6 rounded-2xl bg-[#151515] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -988,7 +1007,7 @@ export const BlogPage: React.FC = () => {
               <div>
                 <div className="aspect-16/9 bg-neutral-100 overflow-hidden">
                   <ResilientImage
-                    src={post.image}
+                    src={post.cover_image}
                     alt={post.title}
                     className="w-full h-full object-cover"
                   />
@@ -997,9 +1016,17 @@ export const BlogPage: React.FC = () => {
                   <div className="flex items-center gap-2 text-xs text-neutral-500">
                     <span className="font-semibold text-[#E9AD18]">{post.category}</span>
                     <span>·</span>
-                    <span>{post.publishedAt}</span>
+                    <span>
+                      {post.created_at
+                        ? new Date(post.created_at).toLocaleDateString('en-IN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: '2-digit',
+                          })
+                        : 'Recent'}
+                    </span>
                     <span>·</span>
-                    <span>{post.readTime}</span>
+                    <span>{post.read_time || '4 min read'}</span>
                   </div>
                   <h2 className="text-xl font-display font-extrabold text-[#151515]">
                     {post.title}

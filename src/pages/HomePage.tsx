@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowRight,
   Award,
   Briefcase,
   Car,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Clock,
   Headphones,
   MapPin,
@@ -31,7 +34,33 @@ export const HomePage: React.FC = () => {
   } = useApp();
 
   const [activeSlide, setActiveSlide] = useState(0);
+  const [wheelStep, setWheelStep] = useState(0);
+  const [wheelDirection, setWheelDirection] = useState<1 | -1>(1);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const wheelContainerRef = useRef<HTMLDivElement | null>(null);
+  const lastWheelTimeRef = useRef<number>(0);
+  const touchStartYRef = useRef<number | null>(null);
+
+  const rotateWheel = useCallback((delta: number) => {
+    if (delta === 0) return;
+    setWheelDirection(delta > 0 ? 1 : -1);
+    setWheelStep((prev) => prev + delta);
+  }, []);
+
+  useEffect(() => {
+    const el = wheelContainerRef.current;
+    if (!el) return;
+    const handleWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) < 4) return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastWheelTimeRef.current < 160) return;
+      lastWheelTimeRef.current = now;
+      rotateWheel(e.deltaY > 0 ? 1 : -1);
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [rotateWheel]);
 
   // Quick Enquiry form state (Section 8)
   const [qName, setQName] = useState('');
@@ -349,79 +378,250 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* SECTION 2: FEATURED RENTAL CATEGORIES (Dark highway-inspired section matching screenshot) */}
-      <section className="bg-[#151515] text-white py-16 md:py-20 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-            <div>
-              <p className="text-xs font-display font-bold uppercase tracking-wider text-[#FFD21F]">
-                Our Core Capabilities
-              </p>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-white mt-1">
-                Featured Car & Coach Rental Categories
-              </h2>
-            </div>
-            <p className="text-sm text-neutral-400 max-w-md">
-              Select from our six specialized transportation verticals tailored for individuals,
-              families, weddings, and corporate institutions in Kolkata.
-            </p>
-          </div>
+      {/* SECTION 2: FEATURED RENTAL CATEGORIES (Vertical Wheel Carousel Showcase) */}
+      <section className="bg-[#151515] text-white py-16 md:py-20 relative overflow-hidden border-y border-neutral-800/80">
+        {(() => {
+          const totalCategories = services.length || 1;
+          const activeIdx = ((wheelStep % totalCategories) + totalCategories) % totalCategories;
+          const activeItem = services[activeIdx] || services[0];
+          const visibleOffsets = [-3, -2, -1, 0, 1, 2, 3];
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {services.map((service) => (
-              <div
-                key={service.id}
-                className="group rounded-xl overflow-hidden bg-[#242424] border border-neutral-800 hover:border-[#FFD21F]/60 transition-colors grid grid-cols-1 sm:grid-cols-12"
-              >
-                {/* Left Vehicle Image Box */}
-                <div className="sm:col-span-5 bg-white relative min-h-[200px] overflow-hidden">
-                  <ResilientImage
-                    src={service.heroImage}
-                    alt={service.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+          return (
+            <div className="max-w-7xl mx-auto px-6 relative z-10">
+              {/* Section Top Heading */}
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+                <div>
+                  <p className="text-xs font-display font-bold uppercase tracking-wider text-[#FFD21F]">
+                    Our Core Capabilities
+                  </p>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-white mt-1">
+                    Featured Car & Coach Rental Categories
+                  </h2>
                 </div>
-
-                {/* Right Dark Content Box (Directly inspired by screenshot) */}
-                <div className="sm:col-span-7 p-6 flex flex-col justify-between bg-[#151515]/95">
-                  <div className="space-y-2.5">
-                    <h3 className="text-xl font-display font-bold text-[#FFD21F]">
-                      {service.title}
-                    </h3>
-                    <p className="text-xs text-neutral-200 font-medium">
-                      {service.shortDescription}
-                    </p>
-                    <p className="text-xs text-neutral-400 leading-relaxed line-clamp-3">
-                      {service.fullDescription}
-                    </p>
-                  </div>
-
-                  <div className="pt-5 mt-4 border-t border-neutral-800 flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-3 self-start md:self-auto">
+                  <span className="font-mono-num text-xs font-semibold text-neutral-400">
+                    {String(activeIdx + 1).padStart(2, '0')} /{' '}
+                    {String(totalCategories).padStart(2, '0')}
+                  </span>
+                  <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => navigate(service.id)}
-                      className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-[#FFD21F] hover:text-white transition-colors cursor-pointer whitespace-nowrap"
+                      type="button"
+                      onClick={() => rotateWheel(-1)}
+                      aria-label="Rotate category wheel up"
+                      className="w-9 h-9 rounded-lg bg-[#242424] border border-neutral-700 hover:border-[#FFD21F] hover:text-[#FFD21F] text-white flex items-center justify-center transition-colors cursor-pointer"
                     >
-                      <span>View Details</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ChevronUp className="w-4 h-4" />
                     </button>
-
                     <button
-                      onClick={() =>
-                        openEnquiryModal({
-                          selectedService: service.title,
-                          selectedVehicle: service.vehicleCategories[0] || 'Any Suitable Vehicle',
-                        })
-                      }
-                      className="ml-auto px-3.5 py-2 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-xs transition-colors cursor-pointer whitespace-nowrap"
+                      type="button"
+                      onClick={() => rotateWheel(1)}
+                      aria-label="Rotate category wheel down"
+                      className="w-9 h-9 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] flex items-center justify-center transition-colors cursor-pointer"
                     >
-                      Enquire Now
+                      <ChevronDown className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+
+              {/* Fixed-Height Two-Column Interactive Showcase */}
+              <div className="rounded-2xl bg-[#1a1a1a]/90 border border-neutral-800 p-5 sm:p-7 lg:h-[460px] grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch shadow-2xl">
+                {/* Left Side: Vertical Wheel Selector */}
+                <div className="lg:col-span-5 flex flex-col justify-between">
+                  <div
+                    ref={wheelContainerRef}
+                    tabIndex={0}
+                    role="listbox"
+                    aria-label="Featured Car and Coach Rental Categories"
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        rotateWheel(1);
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        rotateWheel(-1);
+                      }
+                    }}
+                    onTouchStart={(e) => {
+                      touchStartYRef.current = e.touches[0].clientY;
+                    }}
+                    onTouchEnd={(e) => {
+                      if (touchStartYRef.current === null) return;
+                      const dy = touchStartYRef.current - e.changedTouches[0].clientY;
+                      touchStartYRef.current = null;
+                      if (Math.abs(dy) > 22) {
+                        rotateWheel(dy > 0 ? 1 : -1);
+                      }
+                    }}
+                    className="relative h-[340px] lg:h-full w-full overflow-hidden select-none focus:outline-none rounded-xl"
+                  >
+                    {/* Top & Bottom Gradient Masks */}
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#1a1a1a] via-[#1a1a1a]/80 to-transparent z-20"
+                    />
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/80 to-transparent z-20"
+                    />
+
+                    {/* Rotating Virtual Ring Items (Bottom-to-Top Infinite Loop) */}
+                    {visibleOffsets.map((offset) => {
+                      const slotKey = wheelStep + offset;
+                      const itemIdx =
+                        ((slotKey % totalCategories) + totalCategories) % totalCategories;
+                      const item = services[itemIdx];
+                      if (!item) return null;
+
+                      const isCenter = offset === 0;
+                      const absOffset = Math.abs(offset);
+                      const opacity =
+                        isCenter ? 1 : absOffset === 1 ? 0.42 : absOffset === 2 ? 0.24 : 0;
+                      const scale =
+                        isCenter ? 1.03 : absOffset === 1 ? 0.94 : absOffset === 2 ? 0.87 : 0.82;
+                      const translateY = offset * 66;
+
+                      return (
+                        <button
+                          key={slotKey}
+                          type="button"
+                          role="option"
+                          aria-selected={isCenter}
+                          onClick={() => {
+                            if (offset !== 0) rotateWheel(offset);
+                          }}
+                          style={{
+                            opacity,
+                            transform: `translate3d(0, calc(-50% + ${translateY}px), 0) scale(${scale})`,
+                            transition:
+                              'transform 380ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease, border-color 250ms ease, background-color 250ms ease',
+                          }}
+                          className={`absolute left-3 right-3 top-1/2 h-[56px] px-4 rounded-xl border flex items-center justify-between gap-3 text-left origin-center will-change-transform ${
+                            absOffset >= 3 ? 'pointer-events-none' : 'cursor-pointer'
+                          } ${
+                            isCenter
+                              ? 'bg-[#242424] border-[#FFD21F] shadow-[0_10px_28px_-8px_rgba(255,210,31,0.3)] z-10'
+                              : 'bg-[#151515]/90 border-neutral-800/90 hover:border-neutral-600'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            <span
+                              className={`font-mono-num text-xs font-bold px-2.5 py-1 rounded-md shrink-0 transition-colors ${
+                                isCenter
+                                  ? 'bg-[#FFD21F] text-[#151515]'
+                                  : 'bg-neutral-800 text-neutral-400'
+                              }`}
+                            >
+                              {String(itemIdx + 1).padStart(2, '0')}
+                            </span>
+                            <span
+                              className={`font-display font-bold text-sm sm:text-base truncate transition-colors ${
+                                isCenter ? 'text-white' : 'text-neutral-300'
+                              }`}
+                            >
+                              {item.title}
+                            </span>
+                          </div>
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all ${
+                              isCenter ? 'bg-[#FFD21F] scale-125' : 'bg-neutral-700'
+                            }`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Right Side: Active Category Card */}
+                <div className="lg:col-span-7 h-full">
+                  {activeItem && (
+                    <div className="h-full rounded-xl bg-gradient-to-br from-[#232323] via-[#1b1b1b] to-[#151515] border border-neutral-800 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden">
+                      {/* Subtle Executive Accent Line */}
+                      <div
+                        aria-hidden="true"
+                        className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD21F] via-[#E9AD18] to-transparent"
+                      />
+
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.div
+                          key={activeItem.id}
+                          initial={{ opacity: 0, y: wheelDirection > 0 ? 14 : -14 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: wheelDirection > 0 ? -12 : 12 }}
+                          transition={{ duration: 0.24, ease: 'easeOut' }}
+                          className="space-y-4 my-auto"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#FFD21F]/15 border border-[#FFD21F]/40 text-[#FFD21F] font-mono-num text-xs font-bold">
+                              <span>{String(activeIdx + 1).padStart(2, '0')}</span>
+                              <span className="text-neutral-400">·</span>
+                              <span className="font-display uppercase tracking-wider text-[11px]">
+                                Featured Vertical
+                              </span>
+                            </span>
+                            <span className="text-xs text-neutral-500 font-mono-num hidden sm:inline">
+                              Ghosh Travels Kolkata
+                            </span>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h3 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight">
+                              {activeItem.title}
+                            </h3>
+                            <p className="text-sm sm:text-base font-bold text-[#FFD21F]">
+                              {activeItem.shortDescription}
+                            </p>
+                          </div>
+
+                          <p className="text-sm text-neutral-300 leading-relaxed">
+                            {activeItem.fullDescription}
+                          </p>
+                        </motion.div>
+                      </AnimatePresence>
+
+                      {/* Action Buttons */}
+                      <div className="pt-6 mt-6 border-t border-neutral-800 flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => navigate(activeItem.id)}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-[#FFD21F]/70 hover:border-[#FFD21F] text-[#FFD21F] hover:bg-[#FFD21F]/10 font-display font-bold text-xs sm:text-sm transition-colors cursor-pointer whitespace-nowrap"
+                        >
+                          <span>View Details</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openEnquiryModal({
+                              selectedService: activeItem.title,
+                              selectedVehicle:
+                                activeItem.vehicleCategories[0] || 'Any Suitable Vehicle',
+                            })
+                          }
+                          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-xs sm:text-sm transition-colors cursor-pointer whitespace-nowrap shadow-md"
+                        >
+                          <span>Enquire Now</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Section Footer Subtext / Tagline */}
+              <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-neutral-400">
+                <p className="font-medium text-neutral-300">
+                  Welcome to Ghosh Travels – Professional Chauffeur &amp; Fleet Service in Kolkata
+                </p>
+                <p className="text-neutral-500">
+                  Scroll, swipe, click, or use the arrows to rotate categories
+                </p>
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       {/* SECTION 3: WELCOME TO GHOSH TRAVELS (Overlapping Yellow-Bordered Card like screenshot) */}

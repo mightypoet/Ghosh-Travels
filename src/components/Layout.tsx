@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import {
   CheckCircle2,
   ChevronDown,
+  Facebook,
+  Instagram,
   Mail,
   MapPin,
   Menu,
@@ -797,7 +799,25 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </ul>
 
             {/* Social Media & Direct Connect Icons */}
-            <div className="flex items-center gap-2.5 mt-5">
+            <div className="flex flex-wrap items-center gap-2.5 mt-5">
+              <a
+                href="https://www.facebook.com/ghoshtravels.gt"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Ghosh Travels on Facebook"
+                className="w-9 h-9 rounded-full border border-neutral-400 flex items-center justify-center text-neutral-800 hover:bg-[#151515] hover:text-[#FFD21F] hover:border-[#151515] transition-colors"
+              >
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a
+                href="https://www.instagram.com/ghoshtravels.gt/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Ghosh Travels on Instagram"
+                className="w-9 h-9 rounded-full border border-neutral-400 flex items-center justify-center text-neutral-800 hover:bg-[#151515] hover:text-[#FFD21F] hover:border-[#151515] transition-colors"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
               <a
                 href={buildWhatsAppUrl()}
                 target="_blank"

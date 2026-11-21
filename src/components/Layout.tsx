@@ -53,6 +53,7 @@ export const QuickEnquiryModal: React.FC = () => {
   const [destination, setDestination] = useState(enquiryModalPrefill.destination || '');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedRecord, setSubmittedRecord] = useState<EnquiryRecord | null>(null);
 
   React.useEffect(() => {
@@ -63,12 +64,13 @@ export const QuickEnquiryModal: React.FC = () => {
       setPickupLocation(enquiryModalPrefill.pickupLocation || 'Kolkata');
       setSubmittedRecord(null);
       setError('');
+      setIsSubmitting(false);
     }
   }, [enquiryModalOpen, enquiryModalPrefill]);
 
   if (!enquiryModalOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const cleanPhone = phone.replace(/[\s\-+]/g, '');
@@ -89,20 +91,31 @@ export const QuickEnquiryModal: React.FC = () => {
       return;
     }
 
-    const record = submitEnquiry({
-      sourcePage: 'Quick Enquiry Modal',
-      customerName: name.trim(),
-      phone: phone.trim(),
-      email: email.trim() || 'Not Provided',
-      journeyType: enquiryModalPrefill.journeyType || 'Custom Rental Enquiry',
-      selectedService,
-      selectedVehicle,
-      pickupLocation: pickupLocation.trim(),
-      destination: destination.trim() || 'Local Kolkata',
-      travelDate,
-      message: message.trim(),
-    });
-    setSubmittedRecord(record);
+    setIsSubmitting(true);
+    try {
+      const record = await submitEnquiry({
+        sourcePage: 'Quick Enquiry Modal',
+        customerName: name.trim(),
+        phone: phone.trim(),
+        email: email.trim() || 'Not Provided',
+        journeyType: enquiryModalPrefill.journeyType || 'Custom Rental Enquiry',
+        selectedService,
+        selectedVehicle,
+        pickupLocation: pickupLocation.trim(),
+        destination: destination.trim() || 'Local Kolkata',
+        travelDate,
+        message: message.trim(),
+      });
+      setSubmittedRecord(record);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to submit enquiry right now. Please try again or call +91-9874955056.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -319,9 +332,10 @@ export const QuickEnquiryModal: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 px-5 py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-sm transition-colors whitespace-nowrap cursor-pointer"
+                  disabled={isSubmitting}
+                  className="flex-1 px-5 py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] disabled:opacity-60 text-[#151515] font-display font-bold text-sm transition-colors whitespace-nowrap cursor-pointer"
                 >
-                  SEND ENQUIRY
+                  {isSubmitting ? 'SENDING ENQUIRY...' : 'SEND ENQUIRY'}
                 </button>
                 <a
                   href={buildWhatsAppUrl(

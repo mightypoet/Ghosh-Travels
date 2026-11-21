@@ -42,6 +42,7 @@ export const HomePage: React.FC = () => {
   const [qPickup, setQPickup] = useState('');
   const [qMessage, setQMessage] = useState('');
   const [qError, setQError] = useState('');
+  const [qSubmitting, setQSubmitting] = useState(false);
   const [qSuccessRecord, setQSuccessRecord] = useState<EnquiryRecord | null>(null);
 
   const slides = siteSettings.heroSlides;
@@ -55,7 +56,7 @@ export const HomePage: React.FC = () => {
 
   const currentSlide = slides[activeSlide] || slides[0];
 
-  const handleQuickEnquirySubmit = (e: React.FormEvent) => {
+  const handleQuickEnquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setQError('');
     const cleanPhone = qPhone.replace(/[\s\-+]/g, '');
@@ -76,26 +77,37 @@ export const HomePage: React.FC = () => {
       return;
     }
 
-    const record = submitEnquiry({
-      sourcePage: 'Homepage Quick Enquiry',
-      customerName: qName.trim(),
-      phone: qPhone.trim(),
-      email: qEmail.trim() || 'Not Provided',
-      journeyType: 'Quick Enquiry',
-      selectedService: qService,
-      selectedVehicle: 'Customer Consultation',
-      pickupLocation: qPickup.trim(),
-      destination: 'As per discussion',
-      travelDate: qDate,
-      message: qMessage.trim(),
-    });
-    setQSuccessRecord(record);
-    setQName('');
-    setQEmail('');
-    setQPhone('');
-    setQDate('');
-    setQPickup('');
-    setQMessage('');
+    setQSubmitting(true);
+    try {
+      const record = await submitEnquiry({
+        sourcePage: 'Homepage Quick Enquiry',
+        customerName: qName.trim(),
+        phone: qPhone.trim(),
+        email: qEmail.trim() || 'Not Provided',
+        journeyType: 'Quick Enquiry',
+        selectedService: qService,
+        selectedVehicle: 'Customer Consultation',
+        pickupLocation: qPickup.trim(),
+        destination: 'As per discussion',
+        travelDate: qDate,
+        message: qMessage.trim(),
+      });
+      setQSuccessRecord(record);
+      setQName('');
+      setQEmail('');
+      setQPhone('');
+      setQDate('');
+      setQPickup('');
+      setQMessage('');
+    } catch (err) {
+      setQError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to submit enquiry right now. Please try again or call +91-9874955056.'
+      );
+    } finally {
+      setQSubmitting(false);
+    }
   };
 
   const whyChooseFeatures = [
@@ -890,9 +902,10 @@ export const HomePage: React.FC = () => {
 
               <button
                 type="submit"
-                className="px-7 py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-sm transition-colors cursor-pointer whitespace-nowrap"
+                disabled={qSubmitting}
+                className="px-7 py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] disabled:opacity-60 text-[#151515] font-display font-bold text-sm transition-colors cursor-pointer whitespace-nowrap"
               >
-                SEND ENQUIRY
+                {qSubmitting ? 'SENDING ENQUIRY...' : 'SEND ENQUIRY'}
               </button>
             </form>
           )}

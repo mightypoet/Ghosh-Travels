@@ -164,15 +164,17 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
   const [decorationRequirements, setDecorationRequirements] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedRecord, setSubmittedRecord] = useState<EnquiryRecord | null>(null);
 
   React.useEffect(() => {
     setPreferredVehicle(service.vehicleCategories[0] || 'Consultation Required');
     setSubmittedRecord(null);
     setError('');
+    setIsSubmitting(false);
   }, [service.id, service.vehicleCategories]);
 
-  const handleServiceEnquiry = (e: React.FormEvent) => {
+  const handleServiceEnquiry = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const cleanPhone = phone.replace(/[\s\-+]/g, '');
@@ -198,28 +200,39 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
       .filter(Boolean)
       .join(' | ');
 
-    const record = submitEnquiry({
-      sourcePage: `${service.title} Page`,
-      customerName: name.trim(),
-      companyName: companyName.trim() || undefined,
-      designation: designation.trim() || undefined,
-      phone: phone.trim(),
-      email: email.trim() || 'Not Provided',
-      journeyType,
-      selectedService: service.title,
-      selectedVehicle: preferredVehicle,
-      pickupLocation: pickupLocation.trim(),
-      destination: destination.trim() || 'Kolkata / Custom Venue',
-      travelDate: travelDate || 'Flexible / Upcoming',
-      passengers: passengers || undefined,
-      acPreference: service.id === 'service-mini-bus' ? acPreference : undefined,
-      rentalDuration: rentalDuration || undefined,
-      decorationRequirements:
-        service.id === 'service-wedding-car' ? decorationRequirements : undefined,
-      message: extraNotes,
-    });
+    setIsSubmitting(true);
+    try {
+      const record = await submitEnquiry({
+        sourcePage: `${service.title} Page`,
+        customerName: name.trim(),
+        companyName: companyName.trim() || undefined,
+        designation: designation.trim() || undefined,
+        phone: phone.trim(),
+        email: email.trim() || 'Not Provided',
+        journeyType,
+        selectedService: service.title,
+        selectedVehicle: preferredVehicle,
+        pickupLocation: pickupLocation.trim(),
+        destination: destination.trim() || 'Kolkata / Custom Venue',
+        travelDate: travelDate || 'Flexible / Upcoming',
+        passengers: passengers || undefined,
+        acPreference: service.id === 'service-mini-bus' ? acPreference : undefined,
+        rentalDuration: rentalDuration || undefined,
+        decorationRequirements:
+          service.id === 'service-wedding-car' ? decorationRequirements : undefined,
+        message: extraNotes,
+      });
 
-    setSubmittedRecord(record);
+      setSubmittedRecord(record);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to submit enquiry right now. Please try again or call +91-9874955056.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -738,9 +751,10 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
 
                   <button
                     type="submit"
-                    className="w-full py-3.5 px-6 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-xs sm:text-sm transition-colors cursor-pointer whitespace-nowrap"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 px-6 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] disabled:opacity-60 text-[#151515] font-display font-bold text-xs sm:text-sm transition-colors cursor-pointer whitespace-nowrap"
                   >
-                    {service.ctaText}
+                    {isSubmitting ? 'SUBMITTING ENQUIRY...' : service.ctaText}
                   </button>
                 </form>
               )}

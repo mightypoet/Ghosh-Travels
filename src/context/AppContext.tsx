@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { User } from '@supabase/supabase-js';
 import {
   INITIAL_BLOGS,
   INITIAL_ENQUIRIES,
@@ -8,6 +9,7 @@ import {
   INITIAL_TARIFFS,
   INITIAL_VEHICLES,
 } from '../data/initialData';
+import { isSupabaseConfigured, sanitizeMediaUrl, supabase } from '../lib/supabase';
 import {
   BlogPost,
   BookingPrefill,
@@ -22,6 +24,19 @@ import {
   VehicleItem,
 } from '../types';
 
+export interface BlogInputPayload {
+  id?: string;
+  title: string;
+  slug: string;
+  category: string;
+  cover_image: string;
+  excerpt: string;
+  content: string;
+  published: boolean;
+  author?: string;
+  read_time?: string;
+}
+
 interface AppContextType {
   currentPage: PageId;
   activeBlogSlug: string | null;
@@ -32,29 +47,50 @@ interface AppContextType {
   openEnquiryModal: (prefill?: BookingPrefill) => void;
   closeEnquiryModal: () => void;
 
+  // Supabase Auth & Config
+  supabaseReady: boolean;
+  adminUser: User | null;
+  authLoading: boolean;
+  signInAdmin: (email: string, password: string) => Promise<{ error: string | null }>;
+  signOutAdmin: () => Promise<void>;
+
   // Data state
   siteSettings: SiteSettings;
   services: ServiceDetail[];
   vehicles: VehicleItem[];
   tariffs: TariffPackage[];
   enquiries: EnquiryRecord[];
+  enquiriesLoading: boolean;
+  enquiriesError: string | null;
   jobs: JobOpening[];
   jobApplications: JobApplication[];
   blogs: BlogPost[];
+  blogsLoading: boolean;
+  blogsError: string | null;
 
-  // Actions
+  // Enquiries Actions (Supabase synced)
   submitEnquiry: (
     data: Omit<EnquiryRecord, 'id' | 'referenceNumber' | 'createdAt' | 'status' | 'internalNotes'>
-  ) => EnquiryRecord;
-  updateEnquiryStatus: (id: string, status: EnquiryStatus, internalNotes?: string) => void;
+  ) => Promise<EnquiryRecord>;
+  fetchEnquiries: () => Promise<void>;
+  updateEnquiryStatus: (id: string, status: EnquiryStatus, internalNotes?: string) => Promise<void>;
+  deleteEnquiry: (id: string) => Promise<void>;
+
+  // Blogs Actions (Supabase synced)
+  fetchPublishedBlogs: () => Promise<BlogPost[]>;
+  fetchAllBlogs: () => Promise<BlogPost[]>;
+  fetchBlogBySlug: (slug: string) => Promise<BlogPost | null>;
+  saveBlogPost: (payload: BlogInputPayload) => Promise<BlogPost>;
+  toggleBlogPublished: (id: string, nextPublished: boolean) => Promise<void>;
+  deleteBlogPost: (id: string) => Promise<void>;
+
+  // Fleet / Service / Tariff / Job / Settings Actions
   addOrUpdateVehicle: (vehicle: VehicleItem) => void;
   toggleVehicleActive: (id: string) => void;
   updateService: (service: ServiceDetail) => void;
   updateTariff: (tariff: TariffPackage) => void;
   addOrUpdateJob: (job: JobOpening) => void;
   submitJobApplication: (app: Omit<JobApplication, 'id' | 'appliedAt'>) => JobApplication;
-  addOrUpdateBlog: (blog: BlogPost) => void;
-  deleteBlog: (id: string) => void;
   updateSiteSettings: (settings: SiteSettings) => void;
   resetDemoData: () => void;
 
@@ -155,7 +191,8 @@ const PAGE_SEO: Record<PageId, { title: string; description: string }> = {
   },
   privacy: {
     title: 'Privacy Policy | Ghosh Travels Kolkata',
-    description: 'Privacy policy detailing how Ghosh Travels protects customer booking and enquiry information.',
+    description:
+      'Privacy policy detailing how Ghosh Travels protects customer booking and enquiry information.',
   },
   disclaimer: {
     title: 'Disclaimer | Ghosh Travels Kolkata',
@@ -163,11 +200,13 @@ const PAGE_SEO: Record<PageId, { title: string; description: string }> = {
   },
   refund: {
     title: 'Cancellation & Refund Policy | Ghosh Travels Kolkata',
-    description: 'Information regarding booking cancellation, rescheduling, and refund policies at Ghosh Travels.',
+    description:
+      'Information regarding booking cancellation, rescheduling, and refund policies at Ghosh Travels.',
   },
   admin: {
     title: 'Admin Dashboard & Fleet CMS | Ghosh Travels',
-    description: 'Manage customer enquiries, vehicle fleet, services, tariff packages, careers, and blog posts.',
+    description:
+      'Manage customer enquiries, vehicle fleet, services, tariff packages, careers, and blog posts.',
   },
   'not-found': {
     title: 'Page Not Found (404) | Ghosh Travels',
@@ -187,6 +226,69 @@ function loadFromStorage<T>(key: string, fallback: T): T {
   }
 }
 
+function mapSupabaseEnquiry(row: Record<string, unknown>): EnquiryRecord {
+  const validStatuses: EnquiryStatus[] = ['New', 'Contacted', 'Confirmed', 'Closed'];
+  const rawStatus = String(row.status || 'New') as EnquiryStatus;
+  return {
+    id: String(row.id || ''),
+    referenceNumber: String(row.reference_number || ''),
+    createdAt: row.created_at
+      ? new Date(String(row.created_at)).toLocaleString('en-IN', {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '',
+    status: validStatuses.includes(rawStatus) ? rawStatus : 'New',
+    sourcePage: String(row.source_page || 'Website'),
+    customerName: String(row.customer_name || ''),
+    phone: String(row.phone || ''),
+    email: String(row.email || 'Not Provided'),
+    companyName: row.company_name ? String(row.company_name) : undefined,
+    designation: row.designation ? String(row.designation) : undefined,
+    journeyType: String(row.journey_type || ''),
+    selectedService: String(row.selected_service || ''),
+    selectedVehicle: String(row.selected_vehicle || ''),
+    pickupLocation: String(row.pickup_location || ''),
+    destination: String(row.destination || ''),
+    travelDate: String(row.travel_date || ''),
+    pickupTime: row.pickup_time ? String(row.pickup_time) : undefined,
+    returnDate: row.return_date ? String(row.return_date) : undefined,
+    tripMode:
+      row.trip_mode === 'One Way' || row.trip_mode === 'Round Trip' ? row.trip_mode : undefined,
+    passengers: row.passengers ? String(row.passengers) : undefined,
+    acPreference: row.ac_preference ? String(row.ac_preference) : undefined,
+    rentalDuration: row.rental_duration ? String(row.rental_duration) : undefined,
+    decorationRequirements: row.decoration_requirements
+      ? String(row.decoration_requirements)
+      : undefined,
+    message: String(row.message || ''),
+    internalNotes: String(row.internal_notes || ''),
+  };
+}
+
+function mapSupabaseBlog(row: Record<string, unknown>): BlogPost {
+  return {
+    id: String(row.id || ''),
+    title: String(row.title || ''),
+    slug: String(row.slug || ''),
+    category: String(row.category || 'Car Rental Guides'),
+    cover_image: sanitizeMediaUrl(
+      row.cover_image ? String(row.cover_image) : '',
+      '/src/assets/images/luxury_sedan_fleet_1794903445977.jpg'
+    ),
+    excerpt: String(row.excerpt || ''),
+    content: String(row.content || ''),
+    published: Boolean(row.published),
+    author: row.author ? String(row.author) : 'Ghosh Travels Editorial Desk',
+    read_time: row.read_time ? String(row.read_time) : '4 min read',
+    created_at: row.created_at ? String(row.created_at) : undefined,
+    updated_at: row.updated_at ? String(row.updated_at) : undefined,
+  };
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentPage, setCurrentPage] = useState<PageId>('home');
   const [activeBlogSlug, setActiveBlogSlug] = useState<string | null>(null);
@@ -194,6 +296,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
   const [enquiryModalPrefill, setEnquiryModalPrefill] = useState<BookingPrefill>({});
 
+  // Supabase Auth State
+  const [adminUser, setAdminUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(isSupabaseConfigured);
+
+  // Domain State
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() =>
     loadFromStorage(STORAGE_KEYS.SETTINGS, INITIAL_SITE_SETTINGS)
   );
@@ -206,20 +313,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [tariffs, setTariffs] = useState<TariffPackage[]>(() =>
     loadFromStorage(STORAGE_KEYS.TARIFFS, INITIAL_TARIFFS)
   );
+
+  // Enquiries & Blogs (Supabase-first when configured)
   const [enquiries, setEnquiries] = useState<EnquiryRecord[]>(() =>
-    loadFromStorage(STORAGE_KEYS.ENQUIRIES, INITIAL_ENQUIRIES)
+    isSupabaseConfigured ? [] : loadFromStorage(STORAGE_KEYS.ENQUIRIES, INITIAL_ENQUIRIES)
   );
+  const [enquiriesLoading, setEnquiriesLoading] = useState(false);
+  const [enquiriesError, setEnquiriesError] = useState<string | null>(null);
+
+  const [blogs, setBlogs] = useState<BlogPost[]>(() =>
+    isSupabaseConfigured ? [] : loadFromStorage(STORAGE_KEYS.BLOGS, INITIAL_BLOGS)
+  );
+  const [blogsLoading, setBlogsLoading] = useState(false);
+  const [blogsError, setBlogsError] = useState<string | null>(null);
+
   const [jobs, setJobs] = useState<JobOpening[]>(() =>
     loadFromStorage(STORAGE_KEYS.JOBS, INITIAL_JOBS)
   );
   const [jobApplications, setJobApplications] = useState<JobApplication[]>(() =>
     loadFromStorage(STORAGE_KEYS.JOB_APPS, [])
   );
-  const [blogs, setBlogs] = useState<BlogPost[]>(() =>
-    loadFromStorage(STORAGE_KEYS.BLOGS, INITIAL_BLOGS)
-  );
 
-  // Sync localStorage
+  // Initialize Supabase Auth listener
+  useEffect(() => {
+    if (!supabase) {
+      setAuthLoading(false);
+      return;
+    }
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setAdminUser(data.session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAdminUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    return () => {
+      active = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Sync non-Supabase local settings
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(siteSettings));
@@ -245,10 +384,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [tariffs]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.ENQUIRIES, JSON.stringify(enquiries));
-    } catch {}
+    if (!isSupabaseConfigured) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.ENQUIRIES, JSON.stringify(enquiries));
+      } catch {}
+    }
   }, [enquiries]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.BLOGS, JSON.stringify(blogs));
+      } catch {}
+    }
+  }, [blogs]);
 
   useEffect(() => {
     try {
@@ -262,28 +411,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {}
   }, [jobApplications]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.BLOGS, JSON.stringify(blogs));
-    } catch {}
-  }, [blogs]);
-
   // Update SEO tags dynamically
   useEffect(() => {
     const seo = PAGE_SEO[currentPage] || PAGE_SEO.home;
     document.title = seo.title;
     const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute('content', seo.description);
-    }
+    if (metaDesc) metaDesc.setAttribute('content', seo.description);
     const ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle) {
-      ogTitle.setAttribute('content', seo.title);
-    }
+    if (ogTitle) ogTitle.setAttribute('content', seo.title);
     const ogDesc = document.querySelector('meta[property="og:description"]');
-    if (ogDesc) {
-      ogDesc.setAttribute('content', seo.description);
-    }
+    if (ogDesc) ogDesc.setAttribute('content', seo.description);
   }, [currentPage]);
 
   const navigate = (page: PageId, prefill?: BookingPrefill, blogSlug?: string) => {
@@ -291,7 +428,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setBookingPrefill(prefill);
     }
     if (blogSlug !== undefined) {
-      setActiveBlogSlug(blogSlug);
+      setActiveBlogSlug(blogSlug || null);
     } else if (page !== 'blog') {
       setActiveBlogSlug(null);
     }
@@ -308,31 +445,122 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setEnquiryModalOpen(false);
   };
 
-  const submitEnquiry = (
+  const signInAdmin = async (email: string, password: string) => {
+    if (!supabase) {
+      return {
+        error:
+          'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.',
+      };
+    }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) {
+      return { error: error.message };
+    }
+    setAdminUser(data.user ?? null);
+    return { error: null };
+  };
+
+  const signOutAdmin = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    setAdminUser(null);
+    setEnquiries([]);
+  };
+
+  // --- ENQUIRIES (SUPABASE) ---
+
+  const submitEnquiry = async (
     data: Omit<EnquiryRecord, 'id' | 'referenceNumber' | 'createdAt' | 'status' | 'internalNotes'>
-  ): EnquiryRecord => {
+  ): Promise<EnquiryRecord> => {
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
-    const now = new Date();
-    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
-      now.getDate()
-    ).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(
-      now.getMinutes()
-    ).padStart(2, '0')}`;
+    const referenceNumber = `GT-2026-${randomDigits}`;
+    const nowIso = new Date().toISOString();
 
     const newRecord: EnquiryRecord = {
       ...data,
       id: `enq-${Date.now()}`,
-      referenceNumber: `GT-2026-${randomDigits}`,
-      createdAt: formattedDate,
+      referenceNumber,
+      createdAt: nowIso.slice(0, 16).replace('T', ' '),
       status: 'New',
       internalNotes: 'Submitted via website online enquiry.',
     };
+
+    if (supabase) {
+      const insertPayload = {
+        reference_number: referenceNumber,
+        status: 'New',
+        source_page: data.sourcePage,
+        customer_name: data.customerName,
+        phone: data.phone,
+        email: data.email || 'Not Provided',
+        company_name: data.companyName || null,
+        designation: data.designation || null,
+        journey_type: data.journeyType,
+        selected_service: data.selectedService,
+        selected_vehicle: data.selectedVehicle,
+        pickup_location: data.pickupLocation,
+        destination: data.destination,
+        travel_date: data.travelDate,
+        pickup_time: data.pickupTime || null,
+        return_date: data.returnDate || null,
+        trip_mode: data.tripMode || null,
+        passengers: data.passengers || null,
+        ac_preference: data.acPreference || null,
+        rental_duration: data.rentalDuration || null,
+        decoration_requirements: data.decorationRequirements || null,
+        message: data.message || '',
+        internal_notes: 'Submitted via website online enquiry.',
+      };
+
+      const { error } = await supabase.from('enquiries').insert([insertPayload]);
+      if (error) {
+        throw new Error(`Unable to save enquiry to database: ${error.message}`);
+      }
+      return newRecord;
+    }
 
     setEnquiries((prev) => [newRecord, ...prev]);
     return newRecord;
   };
 
-  const updateEnquiryStatus = (id: string, status: EnquiryStatus, internalNotes?: string) => {
+  const fetchEnquiries = useCallback(async () => {
+    if (!supabase) return;
+    setEnquiriesLoading(true);
+    setEnquiriesError(null);
+    const { data, error } = await supabase
+      .from('enquiries')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      setEnquiriesError(error.message);
+      setEnquiriesLoading(false);
+      return;
+    }
+    setEnquiries((data || []).map((r) => mapSupabaseEnquiry(r as Record<string, unknown>)));
+    setEnquiriesLoading(false);
+  }, []);
+
+  const updateEnquiryStatus = async (
+    id: string,
+    status: EnquiryStatus,
+    internalNotes?: string
+  ) => {
+    if (supabase) {
+      const updatePayload: Record<string, unknown> = { status };
+      if (internalNotes !== undefined) {
+        updatePayload.internal_notes = internalNotes;
+      }
+      const { error } = await supabase.from('enquiries').update(updatePayload).eq('id', id);
+      if (error) {
+        throw new Error(error.message);
+      }
+    }
+
     setEnquiries((prev) =>
       prev.map((item) =>
         item.id === id
@@ -345,6 +573,173 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       )
     );
   };
+
+  const deleteEnquiry = async (id: string) => {
+    if (supabase) {
+      const { error } = await supabase.from('enquiries').delete().eq('id', id);
+      if (error) {
+        throw new Error(error.message);
+      }
+    }
+    setEnquiries((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  // --- BLOGS (SUPABASE) ---
+
+  const fetchPublishedBlogs = useCallback(async (): Promise<BlogPost[]> => {
+    if (!supabase) {
+      return blogs.filter((b) => b.published);
+    }
+    setBlogsLoading(true);
+    setBlogsError(null);
+    const { data, error } = await supabase
+      .from('blogs')
+      .select('*')
+      .eq('published', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      setBlogsError(error.message);
+      setBlogsLoading(false);
+      return [];
+    }
+    const mapped = (data || []).map((r) => mapSupabaseBlog(r as Record<string, unknown>));
+    setBlogs(mapped);
+    setBlogsLoading(false);
+    return mapped;
+  }, [blogs]);
+
+  const fetchAllBlogs = useCallback(async (): Promise<BlogPost[]> => {
+    if (!supabase) {
+      return blogs;
+    }
+    setBlogsLoading(true);
+    setBlogsError(null);
+    const { data, error } = await supabase
+      .from('blogs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      setBlogsError(error.message);
+      setBlogsLoading(false);
+      return [];
+    }
+    const mapped = (data || []).map((r) => mapSupabaseBlog(r as Record<string, unknown>));
+    setBlogs(mapped);
+    setBlogsLoading(false);
+    return mapped;
+  }, [blogs]);
+
+  const fetchBlogBySlug = useCallback(
+    async (slug: string): Promise<BlogPost | null> => {
+      if (!supabase) {
+        return blogs.find((b) => b.slug === slug && b.published) || null;
+      }
+      const { data, error } = await supabase
+        .from('blogs')
+        .select('*')
+        .eq('slug', slug)
+        .eq('published', true)
+        .maybeSingle();
+
+      if (error || !data) {
+        return null;
+      }
+      return mapSupabaseBlog(data as Record<string, unknown>);
+    },
+    [blogs]
+  );
+
+  const saveBlogPost = async (payload: BlogInputPayload): Promise<BlogPost> => {
+    const cleanCover = sanitizeMediaUrl(
+      payload.cover_image,
+      '/src/assets/images/luxury_sedan_fleet_1794903445977.jpg'
+    );
+    const normalizedSlug = payload.slug
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9-]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    if (supabase) {
+      const dbRow = {
+        title: payload.title.trim(),
+        slug: normalizedSlug,
+        category: payload.category,
+        cover_image: cleanCover,
+        excerpt: payload.excerpt.trim(),
+        content: payload.content.trim(),
+        published: payload.published,
+        author: payload.author || 'Ghosh Travels Editorial Desk',
+        read_time: payload.read_time || '4 min read',
+        updated_at: new Date().toISOString(),
+      };
+
+      if (payload.id) {
+        const { data, error } = await supabase
+          .from('blogs')
+          .update(dbRow)
+          .eq('id', payload.id)
+          .select()
+          .single();
+        if (error) throw new Error(error.message);
+        const mapped = mapSupabaseBlog(data as Record<string, unknown>);
+        setBlogs((prev) => prev.map((b) => (b.id === mapped.id ? mapped : b)));
+        return mapped;
+      } else {
+        const { data, error } = await supabase.from('blogs').insert([dbRow]).select().single();
+        if (error) throw new Error(error.message);
+        const mapped = mapSupabaseBlog(data as Record<string, unknown>);
+        setBlogs((prev) => [mapped, ...prev]);
+        return mapped;
+      }
+    }
+
+    const fallbackPost: BlogPost = {
+      id: payload.id || `blog-${Date.now()}`,
+      title: payload.title.trim(),
+      slug: normalizedSlug,
+      category: payload.category,
+      cover_image: cleanCover,
+      excerpt: payload.excerpt.trim(),
+      content: payload.content.trim(),
+      published: payload.published,
+      author: payload.author || 'Ghosh Travels Editorial Desk',
+      read_time: payload.read_time || '4 min read',
+      created_at: new Date().toISOString(),
+    };
+    setBlogs((prev) => {
+      const exists = prev.some((b) => b.id === fallbackPost.id);
+      return exists
+        ? prev.map((b) => (b.id === fallbackPost.id ? fallbackPost : b))
+        : [fallbackPost, ...prev];
+    });
+    return fallbackPost;
+  };
+
+  const toggleBlogPublished = async (id: string, nextPublished: boolean) => {
+    if (supabase) {
+      const { error } = await supabase
+        .from('blogs')
+        .update({ published: nextPublished, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw new Error(error.message);
+    }
+    setBlogs((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, published: nextPublished } : b))
+    );
+  };
+
+  const deleteBlogPost = async (id: string) => {
+    if (supabase) {
+      const { error } = await supabase.from('blogs').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+    }
+    setBlogs((prev) => prev.filter((b) => b.id !== id));
+  };
+
+  // --- FLEET / SERVICE / TARIFF / JOB / SETTINGS ---
 
   const addOrUpdateVehicle = (vehicle: VehicleItem) => {
     setVehicles((prev) => {
@@ -392,20 +787,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newApp;
   };
 
-  const addOrUpdateBlog = (blog: BlogPost) => {
-    setBlogs((prev) => {
-      const exists = prev.some((b) => b.id === blog.id);
-      if (exists) {
-        return prev.map((b) => (b.id === blog.id ? blog : b));
-      }
-      return [blog, ...prev];
-    });
-  };
-
-  const deleteBlog = (id: string) => {
-    setBlogs((prev) => prev.filter((b) => b.id !== id));
-  };
-
   const updateSiteSettings = (settings: SiteSettings) => {
     setSiteSettings(settings);
   };
@@ -415,10 +796,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setServices(INITIAL_SERVICES);
     setVehicles(INITIAL_VEHICLES);
     setTariffs(INITIAL_TARIFFS);
-    setEnquiries(INITIAL_ENQUIRIES);
     setJobs(INITIAL_JOBS);
     setJobApplications([]);
-    setBlogs(INITIAL_BLOGS);
+    if (!isSupabaseConfigured) {
+      setEnquiries(INITIAL_ENQUIRIES);
+      setBlogs(INITIAL_BLOGS);
+    }
   };
 
   const buildWhatsAppUrl = (customMessage?: string, details?: Partial<EnquiryRecord>): string => {
@@ -459,24 +842,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         navigate,
         openEnquiryModal,
         closeEnquiryModal,
+        supabaseReady: isSupabaseConfigured,
+        adminUser,
+        authLoading,
+        signInAdmin,
+        signOutAdmin,
         siteSettings,
         services,
         vehicles,
         tariffs,
         enquiries,
+        enquiriesLoading,
+        enquiriesError,
         jobs,
         jobApplications,
         blogs,
+        blogsLoading,
+        blogsError,
         submitEnquiry,
+        fetchEnquiries,
         updateEnquiryStatus,
+        deleteEnquiry,
+        fetchPublishedBlogs,
+        fetchAllBlogs,
+        fetchBlogBySlug,
+        saveBlogPost,
+        toggleBlogPublished,
+        deleteBlogPost,
         addOrUpdateVehicle,
         toggleVehicleActive,
         updateService,
         updateTariff,
         addOrUpdateJob,
         submitJobApplication,
-        addOrUpdateBlog,
-        deleteBlog,
         updateSiteSettings,
         resetDemoData,
         buildWhatsAppUrl,

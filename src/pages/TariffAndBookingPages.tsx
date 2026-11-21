@@ -38,9 +38,10 @@ export const TariffPage: React.FC = () => {
   const [returnDate, setReturnDate] = useState('');
   const [passengers, setPassengers] = useState('4');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedRecord, setSubmittedRecord] = useState<EnquiryRecord | null>(null);
 
-  const handleTariffFormSubmit = (e: React.FormEvent) => {
+  const handleTariffFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const cleanPhone = phone.replace(/[\s\-+]/g, '');
@@ -61,25 +62,36 @@ export const TariffPage: React.FC = () => {
       return;
     }
 
-    const record = submitEnquiry({
-      sourcePage: 'Tariff Page Custom Quotation Form',
-      customerName: name.trim(),
-      phone: phone.trim(),
-      email: 'Not Provided',
-      journeyType: 'Tariff Quotation Request',
-      selectedService: vehicleCategory,
-      selectedVehicle: vehicleCategory,
-      pickupLocation: pickupLocation.trim(),
-      destination: destination.trim(),
-      travelDate,
-      returnDate: returnDate || undefined,
-      passengers,
-      message: `Custom tariff quotation requested for ${vehicleCategory} (${passengers} passengers). Return Date: ${
-        returnDate || 'Same Day / One Way'
-      }.`,
-    });
+    setIsSubmitting(true);
+    try {
+      const record = await submitEnquiry({
+        sourcePage: 'Tariff Page Custom Quotation Form',
+        customerName: name.trim(),
+        phone: phone.trim(),
+        email: 'Not Provided',
+        journeyType: 'Tariff Quotation Request',
+        selectedService: vehicleCategory,
+        selectedVehicle: vehicleCategory,
+        pickupLocation: pickupLocation.trim(),
+        destination: destination.trim(),
+        travelDate,
+        returnDate: returnDate || undefined,
+        passengers,
+        message: `Custom tariff quotation requested for ${vehicleCategory} (${passengers} passengers). Return Date: ${
+          returnDate || 'Same Day / One Way'
+        }.`,
+      });
 
-    setSubmittedRecord(record);
+      setSubmittedRecord(record);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to submit quotation request. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const transferHubs = [
@@ -482,9 +494,10 @@ export const TariffPage: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="w-full py-3.5 px-6 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-xs sm:text-sm transition-colors cursor-pointer whitespace-nowrap"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 px-6 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] disabled:opacity-60 text-[#151515] font-display font-bold text-xs sm:text-sm transition-colors cursor-pointer whitespace-nowrap"
                   >
-                    GET CUSTOM QUOTATION
+                    {isSubmitting ? 'SENDING REQUEST...' : 'GET CUSTOM QUOTATION'}
                   </button>
                 </form>
               )}
@@ -538,6 +551,7 @@ export const BookCabPage: React.FC = () => {
   const [additionalRequirements, setAdditionalRequirements] = useState<string>('');
 
   const [stepError, setStepError] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submittedBooking, setSubmittedBooking] = useState<EnquiryRecord | null>(null);
 
   useEffect(() => {
@@ -643,26 +657,37 @@ export const BookCabPage: React.FC = () => {
     window.scrollTo({ top: 120, behavior: 'smooth' });
   };
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
     setStepError('');
-    const record = submitEnquiry({
-      sourcePage: 'Book Your Cab 5-Step Portal',
-      customerName: fullName.trim(),
-      phone: mobileNumber.trim(),
-      email: emailAddress.trim() || 'Not Provided',
-      journeyType,
-      selectedService: `${journeyType} (${vehicleCategory})`,
-      selectedVehicle: selectedVehicle || vehicleCategory,
-      pickupLocation: pickupLocation.trim(),
-      destination: destination.trim(),
-      travelDate: pickupDate,
-      pickupTime,
-      returnDate: returnDate || undefined,
-      tripMode,
-      passengers,
-      message: additionalRequirements.trim(),
-    });
-    setSubmittedBooking(record);
+    setIsSubmitting(true);
+    try {
+      const record = await submitEnquiry({
+        sourcePage: 'Book Your Cab 5-Step Portal',
+        customerName: fullName.trim(),
+        phone: mobileNumber.trim(),
+        email: emailAddress.trim() || 'Not Provided',
+        journeyType,
+        selectedService: `${journeyType} (${vehicleCategory})`,
+        selectedVehicle: selectedVehicle || vehicleCategory,
+        pickupLocation: pickupLocation.trim(),
+        destination: destination.trim(),
+        travelDate: pickupDate,
+        pickupTime,
+        returnDate: returnDate || undefined,
+        tripMode,
+        passengers,
+        message: additionalRequirements.trim(),
+      });
+      setSubmittedBooking(record);
+    } catch (err) {
+      setStepError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to submit booking enquiry. Please try again or call +91-9874955056.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1291,10 +1316,11 @@ export const BookCabPage: React.FC = () => {
 
                     <button
                       type="button"
+                      disabled={isSubmitting}
                       onClick={handleFinalSubmit}
-                      className="px-8 py-3.5 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-sm shadow-md transition-colors cursor-pointer whitespace-nowrap"
+                      className="px-8 py-3.5 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] disabled:opacity-60 text-[#151515] font-display font-bold text-sm shadow-md transition-colors cursor-pointer whitespace-nowrap"
                     >
-                      Submit Enquiry
+                      {isSubmitting ? 'Submitting Enquiry...' : 'Submit Enquiry'}
                     </button>
                   </div>
                 </div>

@@ -32,8 +32,8 @@ export interface VehicleItem {
   id: string;
   name: string;
   category: VehicleCategoryKey;
-  seatingCapacity: string; // e.g. "13 Seater" or "Contact for Details"
-  acInfo: string; // e.g. "AC / Non-AC Options" or "Full Climate Control AC" or "Contact for Details"
+  seatingCapacity: string;
+  acInfo: string;
   shortDescription: string;
   highlights: string[];
   image: string;
@@ -80,7 +80,7 @@ export interface DestinationItem {
   image: string;
 }
 
-export type EnquiryStatus = 'New' | 'Pending' | 'Confirmed' | 'Completed';
+export type EnquiryStatus = 'New' | 'Contacted' | 'Confirmed' | 'Closed';
 
 export interface EnquiryRecord {
   id: string;
@@ -138,18 +138,25 @@ export interface JobApplication {
   appliedAt: string;
 }
 
+export type BlogCategory =
+  | 'Travel Tips'
+  | 'Car Rental Guides'
+  | 'Kolkata Travel'
+  | 'Outstation Guides';
+
 export interface BlogPost {
   id: string;
-  slug: string;
   title: string;
-  category: 'Travel Tips' | 'Car Rental Guides' | 'Kolkata Travel' | 'Outstation Guides';
+  slug: string;
+  category: BlogCategory | string;
+  cover_image: string;
   excerpt: string;
-  content: string[];
-  author: string;
-  publishedAt: string;
-  readTime: string;
-  image: string;
+  content: string;
   published: boolean;
+  author?: string;
+  read_time?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface HeroSlide {

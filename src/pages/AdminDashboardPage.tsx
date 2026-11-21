@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Briefcase,
   Car,
-  CheckCircle2,
+  Check,
   ClipboardList,
+  Copy,
   Database,
   Edit3,
+  Eye,
+  EyeOff,
   FileText,
   IndianRupee,
   LayoutDashboard,
+  Loader2,
   Lock,
   LogOut,
-  Mail,
   MessageCircle,
   Phone,
   Plus,
@@ -23,11 +26,9 @@ import {
 import { ResilientImage } from '../components/ResilientImage';
 import { useApp } from '../context/AppContext';
 import { ASSET_IMAGES } from '../data/initialData';
+import { sanitizeMediaUrl, supabase } from '../lib/supabase';
 import {
-  FIREBASE_CONFIG_PLACEHOLDER,
-  isFirebaseConfigured,
-} from '../lib/firebaseConfigPlaceholder';
-import {
+  BlogCategory,
   BlogPost,
   EnquiryStatus,
   JobOpening,
@@ -47,39 +48,125 @@ type AdminTab =
   | 'blogs'
   | 'content';
 
+const SUPABASE_SQL_SCHEMA = `-- Run this SQL in your Supabase SQL Editor to set up Ghosh Travels tables & RLS policies
+
+create table if not exists public.enquiries (
+  id uuid primary key default gen_random_uuid(),
+  reference_number text not null,
+  created_at timestamptz not null default now(),
+  status text not null default 'New' check (status in ('New', 'Contacted', 'Confirmed', 'Closed')),
+  source_page text,
+  customer_name text not null,
+  phone text not null,
+  email text,
+  company_name text,
+  designation text,
+  journey_type text,
+  selected_service text,
+  selected_vehicle text,
+  pickup_location text,
+  destination text,
+  travel_date text,
+  pickup_time text,
+  return_date text,
+  trip_mode text,
+  passengers text,
+  ac_preference text,
+  rental_duration text,
+  decoration_requirements text,
+  message text,
+  internal_notes text
+);
+
+create table if not exists public.blogs (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  slug text not null unique,
+  category text not null default 'Car Rental Guides',
+  cover_image text,
+  excerpt text,
+  content text not null,
+  published boolean not null default false,
+  author text default 'Ghosh Travels Editorial Desk',
+  read_time text default '4 min read',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.enquiries enable row level security;
+alter table public.blogs enable row level security;
+
+-- Public can submit enquiries; only authenticated admins can read/update/delete
+create policy "Anyone can submit enquiries" on public.enquiries
+  for insert to anon, authenticated with check (true);
+create policy "Admins can view enquiries" on public.enquiries
+  for select to authenticated using (true);
+create policy "Admins can update enquiries" on public.enquiries
+  for update to authenticated using (true) with check (true);
+create policy "Admins can delete enquiries" on public.enquiries
+  for delete to authenticated using (true);
+
+-- Public can read published blogs; authenticated admins can manage all blogs
+create policy "Public can read published blogs" on public.blogs
+  for select to anon, authenticated using (published = true or auth.role() = 'authenticated');
+create policy "Admins can insert blogs" on public.blogs
+  for insert to authenticated with check (true);
+create policy "Admins can update blogs" on public.blogs
+  for update to authenticated using (true) with check (true);
+create policy "Admins can delete blogs" on public.blogs
+  for delete to authenticated using (true);
+
+-- Enable Realtime on enquiries
+alter publication supabase_realtime add table public.enquiries;`;
+
 export const AdminDashboardPage: React.FC = () => {
   const {
+    supabaseReady,
+    adminUser,
+    authLoading,
+    signInAdmin,
+    signOutAdmin,
     enquiries,
+    enquiriesLoading,
+    enquiriesError,
     vehicles,
     services,
     tariffs,
     jobs,
     jobApplications,
     blogs,
+    blogsLoading,
+    blogsError,
     siteSettings,
+    fetchEnquiries,
     updateEnquiryStatus,
+    deleteEnquiry,
+    fetchAllBlogs,
+    saveBlogPost,
+    toggleBlogPublished,
+    deleteBlogPost,
     addOrUpdateVehicle,
     toggleVehicleActive,
     updateService,
     updateTariff,
     addOrUpdateJob,
-    addOrUpdateBlog,
-    deleteBlog,
     updateSiteSettings,
     resetDemoData,
     buildWhatsAppUrl,
   } = useApp();
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [adminEmail, setAdminEmail] = useState('travelindia46@gmail.com');
-  const [adminPasscode, setAdminPasscode] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [signingIn, setSigningIn] = useState(false);
   const [authError, setAuthError] = useState('');
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
 
-  // Enquiry filter & notes state
+  // Enquiry filter, notes & delete confirmation state
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState<string>('');
+  const [confirmDeleteEnqId, setConfirmDeleteEnqId] = useState<string | null>(null);
+  const [enqActionError, setEnqActionError] = useState<string | null>(null);
 
   // Vehicle form state
   const [vehId, setVehId] = useState('');
@@ -102,28 +189,77 @@ export const AdminDashboardPage: React.FC = () => {
   const [jobExp, setJobExp] = useState('1 – 3 Years');
   const [jobDesc, setJobDesc] = useState('');
 
-  // Blog form state
+  // Full Blog Manager state
+  const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
   const [blogTitle, setBlogTitle] = useState('');
-  const [blogCategory, setBlogCategory] = useState<BlogPost['category']>('Car Rental Guides');
+  const [blogSlug, setBlogSlug] = useState('');
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [blogCategory, setBlogCategory] = useState<BlogCategory | string>('Car Rental Guides');
+  const [blogCoverImage, setBlogCoverImage] = useState(ASSET_IMAGES.luxurySedans);
   const [blogExcerpt, setBlogExcerpt] = useState('');
-  const [blogBody, setBlogBody] = useState('');
-  const [blogImage, setBlogImage] = useState(ASSET_IMAGES.luxurySedans);
+  const [blogContent, setBlogContent] = useState('');
+  const [blogPublished, setBlogPublished] = useState(true);
+  const [blogSaving, setBlogSaving] = useState(false);
+  const [blogFormMessage, setBlogFormMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(
+    null
+  );
+  const [confirmDeleteBlogId, setConfirmDeleteBlogId] = useState<string | null>(null);
 
-  // Site settings state
+  // Site settings & SQL copy state
   const [settingsForm, setSettingsForm] = useState(siteSettings);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [sqlCopied, setSqlCopied] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Fetch Enquiries & Blogs + Subscribe to Realtime Enquiries once Admin is signed in
+  useEffect(() => {
+    if (!adminUser) return;
+    fetchEnquiries();
+    fetchAllBlogs();
+
+    if (!supabase) return;
+    const channel = supabase
+      .channel('admin-enquiries-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'enquiries' },
+        () => {
+          fetchEnquiries();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase?.removeChannel(channel);
+    };
+  }, [adminUser, fetchEnquiries, fetchAllBlogs]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
-    if (!adminEmail.trim() || !adminPasscode.trim()) {
-      setAuthError('Please enter your administrator email and access code.');
+    if (!adminEmail.trim() || !adminPassword) {
+      setAuthError('Please enter your administrator email and password.');
       return;
     }
-    setIsAuthenticated(true);
+    setSigningIn(true);
+    const { error } = await signInAdmin(adminEmail, adminPassword);
+    setSigningIn(false);
+    if (error) {
+      setAuthError(error);
+    }
   };
 
-  if (!isAuthenticated) {
+  if (authLoading) {
+    return (
+      <div className="min-h-[75vh] bg-[#F4F4F4] flex items-center justify-center p-6">
+        <div className="flex items-center gap-3 text-sm font-display font-bold text-[#151515]">
+          <Loader2 className="w-5 h-5 animate-spin text-[#E9AD18]" />
+          <span>Verifying Admin Session...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!adminUser) {
     return (
       <div className="min-h-[80vh] bg-[#F4F4F4] flex items-center justify-center p-6">
         <div className="w-full max-w-md bg-[#151515] text-white rounded-2xl p-8 border border-neutral-800 shadow-2xl space-y-6">
@@ -142,9 +278,20 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
 
           <p className="text-xs text-neutral-400 leading-relaxed">
-            Sign in to manage customer booking enquiries, vehicle fleet listings, local package
-            tariffs, career openings, and website content.
+            Sign in with your authorized Supabase administrator account to manage live booking
+            enquiries, blog articles, vehicle fleet listings, and website settings.
           </p>
+
+          {!supabaseReady && (
+            <div className="p-3.5 rounded-lg bg-amber-950/60 border border-amber-700 text-amber-200 text-xs space-y-1.5">
+              <strong className="block text-[#FFD21F]">Supabase Configuration Required</strong>
+              <span>
+                Add <code className="text-white">VITE_SUPABASE_URL</code> and{' '}
+                <code className="text-white">VITE_SUPABASE_ANON_KEY</code> in your environment
+                secrets, then create an admin user in Supabase Authentication.
+              </span>
+            </div>
+          )}
 
           {authError && (
             <div className="p-3 rounded-lg bg-red-950/70 border border-red-800 text-red-200 text-xs">
@@ -160,18 +307,17 @@ export const AdminDashboardPage: React.FC = () => {
                 required
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
+                placeholder="admin@ghoshtravels.com"
                 className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white focus:outline-none focus:border-[#FFD21F]"
               />
             </div>
             <div>
-              <label className="block text-xs text-neutral-300 mb-1">
-                Admin Access Passcode (Enter any passcode for preview demo)
-              </label>
+              <label className="block text-xs text-neutral-300 mb-1">Password</label>
               <input
                 type="password"
                 required
-                value={adminPasscode}
-                onChange={(e) => setAdminPasscode(e.target.value)}
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white focus:outline-none focus:border-[#FFD21F]"
               />
@@ -179,24 +325,17 @@ export const AdminDashboardPage: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-sm transition-colors cursor-pointer"
+              disabled={signingIn || !supabaseReady}
+              className="w-full py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] disabled:opacity-50 text-[#151515] font-display font-bold text-sm transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
             >
-              ACCESS ADMIN DASHBOARD
+              {signingIn && <Loader2 className="w-4 h-4 animate-spin" />}
+              <span>{signingIn ? 'SIGNING IN...' : 'ACCESS ADMIN DASHBOARD'}</span>
             </button>
           </form>
 
           <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-[11px] text-neutral-500">
             <span>Fleet Manager: {siteSettings.managementName}</span>
-            <button
-              type="button"
-              onClick={() => {
-                setAdminPasscode('ghosh2026');
-                setIsAuthenticated(true);
-              }}
-              className="text-[#FFD21F] hover:underline cursor-pointer"
-            >
-              Quick Demo Sign-In →
-            </button>
+            <span>Supabase Auth Gate</span>
           </div>
         </div>
       </div>
@@ -205,13 +344,32 @@ export const AdminDashboardPage: React.FC = () => {
 
   const totalEnquiries = enquiries.length;
   const newCount = enquiries.filter((e) => e.status === 'New').length;
-  const pendingCount = enquiries.filter((e) => e.status === 'Pending').length;
+  const contactedCount = enquiries.filter((e) => e.status === 'Contacted').length;
   const confirmedCount = enquiries.filter((e) => e.status === 'Confirmed').length;
-  const completedCount = enquiries.filter((e) => e.status === 'Completed').length;
+  const closedCount = enquiries.filter((e) => e.status === 'Closed').length;
 
   const filteredEnquiries = enquiries.filter(
     (e) => statusFilter === 'All' || e.status === statusFilter
   );
+
+  const handleStatusUpdate = async (id: string, nextStatus: EnquiryStatus, notes?: string) => {
+    setEnqActionError(null);
+    try {
+      await updateEnquiryStatus(id, nextStatus, notes);
+    } catch (err) {
+      setEnqActionError(err instanceof Error ? err.message : 'Failed to update enquiry status.');
+    }
+  };
+
+  const handleDeleteEnquiry = async (id: string) => {
+    setEnqActionError(null);
+    try {
+      await deleteEnquiry(id);
+      setConfirmDeleteEnqId(null);
+    } catch (err) {
+      setEnqActionError(err instanceof Error ? err.message : 'Failed to delete enquiry.');
+    }
+  };
 
   const handleSaveVehicle = (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,8 +380,7 @@ export const AdminDashboardPage: React.FC = () => {
       category: vehCategory,
       seatingCapacity: vehSeating.trim() || 'Contact for Details',
       acInfo: vehAc.trim() || 'Contact for Details',
-      shortDescription:
-        vehDesc.trim() || 'Chauffeur-driven rental vehicle in Kolkata.',
+      shortDescription: vehDesc.trim() || 'Chauffeur-driven rental vehicle in Kolkata.',
       highlights: ['Chauffeur Driven', 'Kolkata & Outstation Ready'],
       image: vehImage || ASSET_IMAGES.fortunerHero,
       serviceId: 'service-premium-car',
@@ -256,47 +413,86 @@ export const AdminDashboardPage: React.FC = () => {
     setJobDesc('');
   };
 
-  const handleSaveBlog = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!blogTitle.trim()) return;
-    const slug = blogTitle
+  const generateSlug = (value: string) =>
+    value
       .toLowerCase()
+      .trim()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
-    const newPost: BlogPost = {
-      id: `blog-${Date.now()}`,
-      slug,
-      title: blogTitle.trim(),
-      category: blogCategory,
-      excerpt: blogExcerpt.trim() || blogTitle.trim(),
-      content: blogBody
-        .split('\n')
-        .map((p) => p.trim())
-        .filter(Boolean),
-      author: 'Ghosh Travels Editorial Desk',
-      publishedAt: new Date().toLocaleDateString('en-IN', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      }),
-      readTime: '4 min read',
-      image: blogImage || ASSET_IMAGES.luxurySedans,
-      published: true,
-    };
-    addOrUpdateBlog(newPost);
+
+  const resetBlogForm = () => {
+    setEditingBlogId(null);
     setBlogTitle('');
+    setBlogSlug('');
+    setSlugTouched(false);
+    setBlogCategory('Car Rental Guides');
+    setBlogCoverImage(ASSET_IMAGES.luxurySedans);
     setBlogExcerpt('');
-    setBlogBody('');
+    setBlogContent('');
+    setBlogPublished(true);
+  };
+
+  const startEditBlog = (post: BlogPost) => {
+    setEditingBlogId(post.id);
+    setBlogTitle(post.title);
+    setBlogSlug(post.slug);
+    setSlugTouched(true);
+    setBlogCategory(post.category);
+    setBlogCoverImage(post.cover_image);
+    setBlogExcerpt(post.excerpt);
+    setBlogContent(post.content);
+    setBlogPublished(post.published);
+    setBlogFormMessage(null);
+  };
+
+  const handleSaveBlog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBlogFormMessage(null);
+    if (!blogTitle.trim() || !blogContent.trim()) {
+      setBlogFormMessage({ type: 'err', text: 'Title and content are required.' });
+      return;
+    }
+    const finalSlug = (blogSlug || generateSlug(blogTitle)).trim();
+    if (!finalSlug) {
+      setBlogFormMessage({ type: 'err', text: 'Please provide a valid URL slug.' });
+      return;
+    }
+
+    setBlogSaving(true);
+    try {
+      await saveBlogPost({
+        id: editingBlogId || undefined,
+        title: blogTitle,
+        slug: finalSlug,
+        category: blogCategory,
+        cover_image: blogCoverImage,
+        excerpt: blogExcerpt || blogTitle,
+        content: blogContent,
+        published: blogPublished,
+      });
+      setBlogFormMessage({
+        type: 'ok',
+        text: editingBlogId ? 'Blog post updated in Supabase.' : 'Blog post created in Supabase.',
+      });
+      resetBlogForm();
+    } catch (err) {
+      setBlogFormMessage({
+        type: 'err',
+        text: err instanceof Error ? err.message : 'Unable to save blog post.',
+      });
+    } finally {
+      setBlogSaving(false);
+    }
   };
 
   const navTabs: Array<{ id: AdminTab; label: string; icon: React.ElementType }> = [
     { id: 'overview', label: '1. Overview', icon: LayoutDashboard },
     { id: 'enquiries', label: `2. Enquiries (${totalEnquiries})`, icon: ClipboardList },
-    { id: 'vehicles', label: `3. Fleet (${vehicles.length})`, icon: Car },
-    { id: 'services', label: '4. Services (6)', icon: ShieldCheck },
-    { id: 'tariffs', label: '5. Tariffs', icon: IndianRupee },
-    { id: 'careers', label: `6. Careers (${jobs.length})`, icon: Briefcase },
-    { id: 'blogs', label: `7. Blog (${blogs.length})`, icon: FileText },
+    { id: 'blogs', label: `3. Blogs (${blogs.length})`, icon: FileText },
+    { id: 'vehicles', label: `4. Fleet (${vehicles.length})`, icon: Car },
+    { id: 'services', label: '5. Services (6)', icon: ShieldCheck },
+    { id: 'tariffs', label: '6. Tariffs', icon: IndianRupee },
+    { id: 'careers', label: `7. Careers (${jobs.length})`, icon: Briefcase },
     { id: 'content', label: '8. Settings & DB', icon: Settings },
   ];
 
@@ -307,7 +503,7 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <p className="text-xs font-display font-bold uppercase tracking-wider text-[#FFD21F]">
-              Ghosh Travels · Fleet & Booking CMS
+              Ghosh Travels · Authenticated Admin ({adminUser.email})
             </p>
             <h1 className="text-2xl font-display font-extrabold text-white">
               Administrator Dashboard
@@ -316,14 +512,17 @@ export const AdminDashboardPage: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={resetDemoData}
+              onClick={() => {
+                fetchEnquiries();
+                fetchAllBlogs();
+              }}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#242424] hover:bg-neutral-700 text-xs text-neutral-300 cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Reset Demo Data</span>
+              <span>Sync Supabase</span>
             </button>
             <button
-              onClick={() => setIsAuthenticated(false)}
+              onClick={signOutAdmin}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-950/80 hover:bg-red-900 text-xs text-red-200 cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -365,9 +564,9 @@ export const AdminDashboardPage: React.FC = () => {
               {[
                 { label: 'Total Enquiries', value: totalEnquiries, note: 'All channels' },
                 { label: 'New Enquiries', value: newCount, note: 'Awaiting call back' },
-                { label: 'Pending Quotations', value: pendingCount, note: 'Quote shared' },
-                { label: 'Confirmed Bookings', value: confirmedCount, note: 'Vehicle assigned' },
-                { label: 'Completed Trips', value: completedCount, note: 'Closed duty' },
+                { label: 'Contacted', value: contactedCount, note: 'Quote shared' },
+                { label: 'Confirmed', value: confirmedCount, note: 'Vehicle assigned' },
+                { label: 'Closed', value: closedCount, note: 'Completed / archived' },
               ].map((stat) => (
                 <div
                   key={stat.label}
@@ -387,7 +586,7 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="bg-white rounded-2xl p-6 border border-neutral-200">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-display font-bold text-lg text-[#151515]">
-                  Recent Customer Enquiries
+                  Recent Customer Enquiries (Newest First)
                 </h2>
                 <button
                   onClick={() => setActiveTab('enquiries')}
@@ -397,65 +596,81 @@ export const AdminDashboardPage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="border-b border-neutral-200 text-neutral-500 uppercase">
-                      <th className="py-3 px-3">Ref #</th>
-                      <th className="py-3 px-3">Customer</th>
-                      <th className="py-3 px-3">Service / Vehicle</th>
-                      <th className="py-3 px-3">Route & Date</th>
-                      <th className="py-3 px-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-100">
-                    {enquiries.slice(0, 5).map((enq) => (
-                      <tr key={enq.id}>
-                        <td className="py-3 px-3 font-mono-num font-bold text-[#151515]">
-                          {enq.referenceNumber}
-                        </td>
-                        <td className="py-3 px-3">
-                          <strong className="text-[#151515] block">{enq.customerName}</strong>
-                          <span className="text-neutral-500 font-mono-num">{enq.phone}</span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="font-medium text-[#151515] block">
-                            {enq.selectedService}
-                          </span>
-                          <span className="text-neutral-500">{enq.selectedVehicle}</span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="block">
-                            {enq.pickupLocation} → {enq.destination}
-                          </span>
-                          <span className="text-neutral-500 font-mono-num">{enq.travelDate}</span>
-                        </td>
-                        <td className="py-3 px-3 font-semibold text-[#151515]">{enq.status}</td>
+              {enquiriesLoading ? (
+                <div className="py-10 flex items-center justify-center gap-2 text-xs text-neutral-500">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Loading enquiries from Supabase...</span>
+                </div>
+              ) : enquiries.length === 0 ? (
+                <p className="py-8 text-center text-xs text-neutral-500">
+                  No enquiries found yet in the Supabase enquiries table.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-neutral-200 text-neutral-500 uppercase">
+                        <th className="py-3 px-3">Ref #</th>
+                        <th className="py-3 px-3">Customer</th>
+                        <th className="py-3 px-3">Service / Vehicle</th>
+                        <th className="py-3 px-3">Route & Date</th>
+                        <th className="py-3 px-3">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-100">
+                      {enquiries.slice(0, 6).map((enq) => (
+                        <tr key={enq.id}>
+                          <td className="py-3 px-3 font-mono-num font-bold text-[#151515]">
+                            {enq.referenceNumber}
+                          </td>
+                          <td className="py-3 px-3">
+                            <strong className="text-[#151515] block">{enq.customerName}</strong>
+                            <span className="text-neutral-500 font-mono-num">{enq.phone}</span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className="font-medium text-[#151515] block">
+                              {enq.selectedService}
+                            </span>
+                            <span className="text-neutral-500">{enq.selectedVehicle}</span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className="block">
+                              {enq.pickupLocation} → {enq.destination}
+                            </span>
+                            <span className="text-neutral-500 font-mono-num">{enq.travelDate}</span>
+                          </td>
+                          <td className="py-3 px-3 font-semibold text-[#151515]">{enq.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* 2. ENQUIRY MANAGEMENT */}
+        {/* 2. ENQUIRY MANAGEMENT (SUPABASE LIVE + REALTIME) */}
         {activeTab === 'enquiries' && (
           <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-xl font-display font-extrabold text-[#151515]">
-                Customer Booking Enquiries ({filteredEnquiries.length})
-              </h2>
+              <div>
+                <h2 className="text-xl font-display font-extrabold text-[#151515]">
+                  Customer Booking Enquiries ({filteredEnquiries.length})
+                </h2>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Sorted newest first · Real-time synced with Supabase enquiries table
+                </p>
+              </div>
               <div className="flex flex-wrap gap-1.5">
-                {['All', 'New', 'Pending', 'Confirmed', 'Completed'].map((st) => (
+                {(['All', 'New', 'Contacted', 'Confirmed', 'Closed'] as const).map((st) => (
                   <button
                     key={st}
                     onClick={() => setStatusFilter(st)}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-display font-bold cursor-pointer ${
                       statusFilter === st
                         ? 'bg-[#151515] text-[#FFD21F]'
-                        : 'bg-white border border-neutral-200 text-neutral-700'
+                        : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-100'
                     }`}
                   >
                     {st}
@@ -464,146 +679,475 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-4">
-              {filteredEnquiries.map((enq) => (
-                <div
-                  key={enq.id}
-                  className="bg-white rounded-xl p-6 border border-neutral-200 space-y-4"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4 border-b border-neutral-100 pb-4">
-                    <div>
-                      <div className="flex items-center gap-2 text-xs text-neutral-500">
-                        <span className="font-mono-num font-bold text-[#151515]">
-                          {enq.referenceNumber}
-                        </span>
-                        <span>·</span>
-                        <span>{enq.createdAt}</span>
-                        <span>·</span>
-                        <span>Source: {enq.sourcePage}</span>
+            {(enquiriesError || enqActionError) && (
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+                {enquiriesError || enqActionError}
+              </div>
+            )}
+
+            {enquiriesLoading ? (
+              <div className="bg-white rounded-xl p-12 border border-neutral-200 flex items-center justify-center gap-2 text-xs text-neutral-600">
+                <Loader2 className="w-4 h-4 animate-spin text-[#E9AD18]" />
+                <span>Fetching enquiries from Supabase...</span>
+              </div>
+            ) : filteredEnquiries.length === 0 ? (
+              <div className="bg-white rounded-xl p-12 border border-neutral-200 text-center text-xs text-neutral-500">
+                No enquiries match the selected filter ({statusFilter}).
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredEnquiries.map((enq) => (
+                  <div
+                    key={enq.id}
+                    className="bg-white rounded-xl p-6 border border-neutral-200 space-y-4"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-4 border-b border-neutral-100 pb-4">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                          <span className="font-mono-num font-bold text-[#151515]">
+                            {enq.referenceNumber}
+                          </span>
+                          <span>·</span>
+                          <span>{enq.createdAt}</span>
+                          <span>·</span>
+                          <span>Source: {enq.sourcePage}</span>
+                        </div>
+                        <h3 className="text-lg font-display font-extrabold text-[#151515] mt-1">
+                          {enq.customerName} {enq.companyName ? `(${enq.companyName})` : ''}
+                        </h3>
                       </div>
-                      <h3 className="text-lg font-display font-extrabold text-[#151515] mt-1">
-                        {enq.customerName}{' '}
-                        {enq.companyName ? `(${enq.companyName})` : ''}
-                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <label className="text-xs text-neutral-500">Status:</label>
+                        <select
+                          value={enq.status}
+                          onChange={(e) =>
+                            handleStatusUpdate(enq.id, e.target.value as EnquiryStatus)
+                          }
+                          className="px-3 py-1.5 rounded-lg bg-[#151515] text-[#FFD21F] font-display font-bold text-xs focus:outline-none cursor-pointer"
+                        >
+                          <option value="New">New</option>
+                          <option value="Contacted">Contacted</option>
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Closed">Closed</option>
+                        </select>
+
+                        {confirmDeleteEnqId === enq.id ? (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleDeleteEnquiry(enq.id)}
+                              className="px-2.5 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold cursor-pointer"
+                            >
+                              Confirm Delete
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteEnqId(null)}
+                              className="px-2.5 py-1.5 rounded-lg bg-neutral-200 text-neutral-700 text-xs cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteEnqId(enq.id)}
+                            className="p-1.5 rounded-lg text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                            aria-label="Delete enquiry"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-neutral-500">Status:</label>
-                      <select
-                        value={enq.status}
-                        onChange={(e) =>
-                          updateEnquiryStatus(enq.id, e.target.value as EnquiryStatus)
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                      <div>
+                        <span className="text-neutral-500 block">Selected Service & Vehicle</span>
+                        <strong className="text-[#151515] block">{enq.selectedService}</strong>
+                        <span className="text-[#E9AD18] font-medium">{enq.selectedVehicle}</span>
+                      </div>
+                      <div>
+                        <span className="text-neutral-500 block">Pickup → Destination</span>
+                        <strong className="text-[#151515] block">
+                          {enq.pickupLocation} → {enq.destination}
+                        </strong>
+                        <span className="text-neutral-600">
+                          {enq.journeyType} {enq.tripMode ? `(${enq.tripMode})` : ''}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-neutral-500 block">Travel Date & Passengers</span>
+                        <strong className="text-[#151515] font-mono-num block">
+                          {enq.travelDate} {enq.pickupTime ? `at ${enq.pickupTime}` : ''}
+                        </strong>
+                        <span className="text-neutral-600">
+                          Passengers: {enq.passengers || 'Not specified'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-neutral-500 block">Direct Customer Contact</span>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <a
+                            href={`tel:${enq.phone.replace(/[^+\d]/g, '')}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-neutral-100 hover:bg-neutral-200 text-[#151515] font-mono-num font-semibold"
+                          >
+                            <Phone className="w-3 h-3" />
+                            {enq.phone}
+                          </a>
+                          <a
+                            href={buildWhatsAppUrl(
+                              `Hello ${enq.customerName}, greetings from Ghosh Travels Kolkata regarding your booking enquiry ${enq.referenceNumber} (${enq.selectedVehicle} on ${enq.travelDate}).`
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#25D366]/20 text-[#15803D] font-semibold"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            WhatsApp
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+
+                    {enq.message && (
+                      <div className="text-xs bg-[#F4F4F4] p-3 rounded-lg text-neutral-700">
+                        <strong>Customer Message:</strong> {enq.message}
+                      </div>
+                    )}
+
+                    {/* Internal Dispatch Notes */}
+                    <div className="pt-2 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      {editingNoteId === enq.id ? (
+                        <div className="flex-1 flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={noteDraft}
+                            onChange={(e) => setNoteDraft(e.target.value)}
+                            placeholder="Add internal dispatch or quotation note..."
+                            className="flex-1 px-3 py-1.5 rounded-lg border border-neutral-300 text-xs"
+                          />
+                          <button
+                            onClick={async () => {
+                              await handleStatusUpdate(enq.id, enq.status, noteDraft);
+                              setEditingNoteId(null);
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-[#151515] text-[#FFD21F] font-bold cursor-pointer"
+                          >
+                            Save Note
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-neutral-500">
+                            <strong>Internal Note:</strong> {enq.internalNotes}
+                          </span>
+                          <button
+                            onClick={() => {
+                              setEditingNoteId(enq.id);
+                              setNoteDraft(enq.internalNotes);
+                            }}
+                            className="text-[#151515] hover:text-[#E9AD18] font-semibold cursor-pointer self-start sm:self-auto"
+                          >
+                            Edit Internal Note
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 3. FULL BLOG MANAGER (SUPABASE BLOGS TABLE) */}
+        {activeTab === 'blogs' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-5">
+              <div className="bg-white rounded-2xl p-6 border border-neutral-200 space-y-4 sticky top-32">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-display font-bold text-lg text-[#151515]">
+                    {editingBlogId ? 'Edit Blog Post' : 'Create Blog Post'}
+                  </h2>
+                  {editingBlogId && (
+                    <button
+                      type="button"
+                      onClick={resetBlogForm}
+                      className="text-xs text-neutral-500 hover:text-[#151515] cursor-pointer"
+                    >
+                      + New Post
+                    </button>
+                  )}
+                </div>
+
+                {blogFormMessage && (
+                  <div
+                    className={`p-3 rounded-lg text-xs border ${
+                      blogFormMessage.type === 'ok'
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                        : 'bg-red-50 border-red-200 text-red-700'
+                    }`}
+                  >
+                    {blogFormMessage.text}
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveBlog} className="space-y-3.5 text-xs">
+                  <div>
+                    <label className="block font-semibold text-neutral-700 mb-1">Title *</label>
+                    <input
+                      type="text"
+                      required
+                      value={blogTitle}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setBlogTitle(val);
+                        if (!slugTouched) {
+                          setBlogSlug(generateSlug(val));
                         }
-                        className="px-3 py-1.5 rounded-lg bg-[#151515] text-[#FFD21F] font-display font-bold text-xs focus:outline-none"
+                      }}
+                      placeholder="e.g. Best Wedding Cars in Kolkata for 2026"
+                      className="w-full px-3 py-2 rounded-lg border border-neutral-300"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-neutral-700 mb-1">Slug *</label>
+                    <input
+                      type="text"
+                      required
+                      value={blogSlug}
+                      onChange={(e) => {
+                        setSlugTouched(true);
+                        setBlogSlug(generateSlug(e.target.value));
+                      }}
+                      placeholder="best-wedding-cars-kolkata-2026"
+                      className="w-full px-3 py-2 rounded-lg border border-neutral-300 font-mono-num"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-neutral-700 mb-1">Category</label>
+                      <select
+                        value={blogCategory}
+                        onChange={(e) => setBlogCategory(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-neutral-300"
                       >
-                        <option value="New">New</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Completed">Completed</option>
+                        <option value="Car Rental Guides">Car Rental Guides</option>
+                        <option value="Outstation Guides">Outstation Guides</option>
+                        <option value="Kolkata Travel">Kolkata Travel</option>
+                        <option value="Travel Tips">Travel Tips</option>
                       </select>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                    <div>
-                      <span className="text-neutral-500 block">Selected Service & Vehicle</span>
-                      <strong className="text-[#151515] block">{enq.selectedService}</strong>
-                      <span className="text-[#E9AD18] font-medium">{enq.selectedVehicle}</span>
-                    </div>
-                    <div>
-                      <span className="text-neutral-500 block">Pickup → Destination</span>
-                      <strong className="text-[#151515] block">
-                        {enq.pickupLocation} → {enq.destination}
-                      </strong>
-                      <span className="text-neutral-600">
-                        {enq.journeyType} {enq.tripMode ? `(${enq.tripMode})` : ''}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-neutral-500 block">Travel Date & Passengers</span>
-                      <strong className="text-[#151515] font-mono-num block">
-                        {enq.travelDate} {enq.pickupTime ? `at ${enq.pickupTime}` : ''}
-                      </strong>
-                      <span className="text-neutral-600">
-                        Passengers: {enq.passengers || 'Not specified'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-neutral-500 block">Direct Customer Contact</span>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <a
-                          href={`tel:${enq.phone.replace(/[^+\d]/g, '')}`}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-neutral-100 hover:bg-neutral-200 text-[#151515] font-mono-num font-semibold"
-                        >
-                          <Phone className="w-3 h-3" />
-                          {enq.phone}
-                        </a>
-                        <a
-                          href={buildWhatsAppUrl(
-                            `Hello ${enq.customerName}, greetings from Ghosh Travels Kolkata regarding your booking enquiry ${enq.referenceNumber} (${enq.selectedVehicle} on ${enq.travelDate}).`
-                          )}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#25D366]/20 text-[#15803D] font-semibold"
-                        >
-                          <MessageCircle className="w-3 h-3" />
-                          WhatsApp
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  {enq.message && (
-                    <div className="text-xs bg-[#F4F4F4] p-3 rounded-lg text-neutral-700">
-                      <strong>Customer Message:</strong> {enq.message}
-                    </div>
-                  )}
-
-                  {/* Internal Dispatch Notes */}
-                  <div className="pt-2 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    {editingNoteId === enq.id ? (
-                      <div className="flex-1 flex items-center gap-2">
+                    <div className="flex items-end pb-1.5">
+                      <label className="inline-flex items-center gap-2 cursor-pointer select-none">
                         <input
-                          type="text"
-                          value={noteDraft}
-                          onChange={(e) => setNoteDraft(e.target.value)}
-                          placeholder="Add internal dispatch or quotation note..."
-                          className="flex-1 px-3 py-1.5 rounded-lg border border-neutral-300 text-xs"
+                          type="checkbox"
+                          checked={blogPublished}
+                          onChange={(e) => setBlogPublished(e.target.checked)}
+                          className="w-4 h-4 accent-[#151515]"
                         />
-                        <button
-                          onClick={() => {
-                            updateEnquiryStatus(enq.id, enq.status, noteDraft);
-                            setEditingNoteId(null);
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-[#151515] text-[#FFD21F] font-bold cursor-pointer"
-                        >
-                          Save Note
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <span className="text-neutral-500">
-                          <strong>Internal Note:</strong> {enq.internalNotes}
+                        <span className="font-semibold text-[#151515]">
+                          Published (Live on Blog)
                         </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-neutral-700 mb-1">
+                      Cover Image URL
+                    </label>
+                    <input
+                      type="text"
+                      value={blogCoverImage}
+                      onChange={(e) => setBlogCoverImage(e.target.value)}
+                      placeholder="https://... or /src/assets/images/..."
+                      className="w-full px-3 py-2 rounded-lg border border-neutral-300"
+                    />
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {[
+                        { label: 'Luxury Sedans', url: ASSET_IMAGES.luxurySedans },
+                        { label: 'Fortuner SUV', url: ASSET_IMAGES.fortunerHero },
+                        { label: 'Wedding Car', url: ASSET_IMAGES.weddingCar },
+                        { label: 'Volvo Coach', url: ASSET_IMAGES.volvoCoach },
+                      ].map((preset) => (
                         <button
-                          onClick={() => {
-                            setEditingNoteId(enq.id);
-                            setNoteDraft(enq.internalNotes);
-                          }}
-                          className="text-[#151515] hover:text-[#E9AD18] font-semibold cursor-pointer self-start sm:self-auto"
+                          key={preset.label}
+                          type="button"
+                          onClick={() => setBlogCoverImage(preset.url)}
+                          className="px-2 py-1 rounded bg-[#F4F4F4] hover:bg-neutral-200 text-[11px] text-neutral-700 cursor-pointer"
                         >
-                          Edit Internal Note
+                          {preset.label}
                         </button>
-                      </>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-neutral-700 mb-1">Excerpt</label>
+                    <textarea
+                      rows={2}
+                      value={blogExcerpt}
+                      onChange={(e) => setBlogExcerpt(e.target.value)}
+                      placeholder="Short summary displayed on blog cards..."
+                      className="w-full px-3 py-2 rounded-lg border border-neutral-300"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-neutral-700 mb-1">
+                      Content * (Separate paragraphs with blank lines)
+                    </label>
+                    <textarea
+                      rows={6}
+                      required
+                      value={blogContent}
+                      onChange={(e) => setBlogContent(e.target.value)}
+                      placeholder="Write the full article prose here..."
+                      className="w-full px-3 py-2 rounded-lg border border-neutral-300"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={blogSaving}
+                      className="flex-1 py-2.5 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold cursor-pointer inline-flex items-center justify-center gap-1.5"
+                    >
+                      {blogSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      <span>{editingBlogId ? 'Update Blog Post' : 'Save Blog Post'}</span>
+                    </button>
+                    {editingBlogId && (
+                      <button
+                        type="button"
+                        onClick={resetBlogForm}
+                        className="px-4 py-2.5 rounded-lg bg-neutral-200 text-neutral-700 font-semibold cursor-pointer"
+                      >
+                        Cancel
+                      </button>
                     )}
                   </div>
+                </form>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-display font-extrabold text-[#151515]">
+                  All Blog Posts ({blogs.length})
+                </h2>
+                {blogsLoading && <Loader2 className="w-4 h-4 animate-spin text-[#E9AD18]" />}
+              </div>
+
+              {blogsError && (
+                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+                  {blogsError}
                 </div>
-              ))}
+              )}
+
+              {blogs.length === 0 && !blogsLoading ? (
+                <div className="bg-white rounded-xl p-10 border border-neutral-200 text-center text-xs text-neutral-500">
+                  No blog posts found in the Supabase blogs table. Use the form on the left to
+                  publish your first article.
+                </div>
+              ) : (
+                blogs.map((b) => (
+                  <div
+                    key={b.id}
+                    className="bg-white rounded-xl p-5 border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  >
+                    <div className="flex gap-4 items-start">
+                      <div className="w-24 h-16 rounded-lg overflow-hidden bg-neutral-100 shrink-0">
+                        <ResilientImage
+                          src={sanitizeMediaUrl(b.cover_image, ASSET_IMAGES.luxurySedans)}
+                          alt={b.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-neutral-500">
+                          <span className="font-semibold text-[#E9AD18]">{b.category}</span>
+                          <span>·</span>
+                          <span className={b.published ? 'text-emerald-700 font-semibold' : 'text-neutral-500'}>
+                            {b.published ? 'Published' : 'Draft'}
+                          </span>
+                          <span>·</span>
+                          <span className="font-mono-num">/{b.slug}</span>
+                        </div>
+                        <h3 className="font-display font-bold text-sm text-[#151515]">{b.title}</h3>
+                        <p className="text-xs text-neutral-500 line-clamp-2">{b.excerpt}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                      <button
+                        onClick={() => toggleBlogPublished(b.id, !b.published)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                          b.published
+                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                            : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                        }`}
+                        title={b.published ? 'Unpublish' : 'Publish'}
+                      >
+                        {b.published ? (
+                          <>
+                            <EyeOff className="w-3.5 h-3.5" />
+                            <span>Unpublish</span>
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Publish</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => startEditBlog(b)}
+                        className="p-2 rounded-lg bg-[#F4F4F4] hover:bg-[#FFD21F] text-[#151515] cursor-pointer"
+                        aria-label="Edit blog post"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+
+                      {confirmDeleteBlogId === b.id ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={async () => {
+                              await deleteBlogPost(b.id);
+                              setConfirmDeleteBlogId(null);
+                            }}
+                            className="px-2.5 py-1.5 rounded bg-red-600 text-white text-xs font-bold cursor-pointer"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteBlogId(null)}
+                            className="px-2 py-1.5 rounded bg-neutral-200 text-xs cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteBlogId(b.id)}
+                          className="p-2 rounded-lg text-neutral-400 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                          aria-label="Delete blog post"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
 
-        {/* 3. VEHICLE MANAGEMENT */}
+        {/* 4. VEHICLE MANAGEMENT */}
         {activeTab === 'vehicles' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-4">
@@ -663,7 +1207,7 @@ export const AdminDashboardPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block font-semibold text-neutral-700 mb-1">
-                      Vehicle Photograph Preset / URL
+                      Vehicle Photograph Preset
                     </label>
                     <select
                       value={vehImage}
@@ -771,7 +1315,7 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* 4. SERVICE MANAGEMENT */}
+        {/* 5. SERVICE MANAGEMENT */}
         {activeTab === 'services' && (
           <div className="space-y-6">
             <h2 className="text-xl font-display font-extrabold text-[#151515]">
@@ -863,7 +1407,7 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* 5. TARIFF MANAGEMENT */}
+        {/* 6. TARIFF MANAGEMENT */}
         {activeTab === 'tariffs' && (
           <div className="space-y-6">
             <h2 className="text-xl font-display font-extrabold text-[#151515]">
@@ -966,13 +1510,11 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* 6. CAREER MANAGEMENT */}
+        {/* 7. CAREER MANAGEMENT */}
         {activeTab === 'careers' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-neutral-200 space-y-4">
-              <h2 className="font-display font-bold text-lg text-[#151515]">
-                Post Job Opening
-              </h2>
+              <h2 className="font-display font-bold text-lg text-[#151515]">Post Job Opening</h2>
               <form onSubmit={handleSaveJob} className="space-y-3 text-xs">
                 <input
                   type="text"
@@ -1046,84 +1588,10 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* 7. BLOG MANAGEMENT */}
-        {activeTab === 'blogs' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-neutral-200 space-y-4">
-              <h2 className="font-display font-bold text-lg text-[#151515]">
-                Publish New Blog Article
-              </h2>
-              <form onSubmit={handleSaveBlog} className="space-y-3 text-xs">
-                <input
-                  type="text"
-                  required
-                  value={blogTitle}
-                  onChange={(e) => setBlogTitle(e.target.value)}
-                  placeholder="Article Title *"
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-300"
-                />
-                <select
-                  value={blogCategory}
-                  onChange={(e) => setBlogCategory(e.target.value as BlogPost['category'])}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-300"
-                >
-                  <option value="Car Rental Guides">Car Rental Guides</option>
-                  <option value="Outstation Guides">Outstation Guides</option>
-                  <option value="Kolkata Travel">Kolkata Travel</option>
-                  <option value="Travel Tips">Travel Tips</option>
-                </select>
-                <input
-                  type="text"
-                  value={blogExcerpt}
-                  onChange={(e) => setBlogExcerpt(e.target.value)}
-                  placeholder="Short Summary / Excerpt"
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-300"
-                />
-                <textarea
-                  rows={5}
-                  required
-                  value={blogBody}
-                  onChange={(e) => setBlogBody(e.target.value)}
-                  placeholder="Article Content (Separate paragraphs with a new line)..."
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-300"
-                />
-                <button
-                  type="submit"
-                  className="w-full py-2.5 rounded-lg bg-[#FFD21F] text-[#151515] font-display font-bold cursor-pointer"
-                >
-                  Publish Article
-                </button>
-              </form>
-            </div>
-
-            <div className="lg:col-span-7 space-y-4">
-              {blogs.map((b) => (
-                <div
-                  key={b.id}
-                  className="bg-white rounded-xl p-5 border border-neutral-200 flex items-center justify-between gap-4"
-                >
-                  <div>
-                    <span className="text-[11px] font-semibold text-[#E9AD18]">{b.category}</span>
-                    <h3 className="font-display font-bold text-sm text-[#151515]">{b.title}</h3>
-                    <p className="text-xs text-neutral-500 mt-0.5">{b.publishedAt}</p>
-                  </div>
-                  <button
-                    onClick={() => deleteBlog(b.id)}
-                    className="p-2 text-neutral-400 hover:text-red-600 cursor-pointer"
-                    aria-label="Delete blog post"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 8. WEBSITE CONTENT & FIREBASE INTEGRATION */}
+        {/* 8. WEBSITE CONTENT & SUPABASE SCHEMA */}
         {activeTab === 'content' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-neutral-200 space-y-4">
+            <div className="lg:col-span-6 bg-white rounded-2xl p-6 border border-neutral-200 space-y-4">
               <h2 className="font-display font-bold text-lg text-[#151515]">
                 Website Contact & Company Settings
               </h2>
@@ -1201,7 +1669,7 @@ export const AdminDashboardPage: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
                   onClick={() => {
                     updateSiteSettings(settingsForm);
@@ -1212,6 +1680,12 @@ export const AdminDashboardPage: React.FC = () => {
                 >
                   Save Website Content
                 </button>
+                <button
+                  onClick={resetDemoData}
+                  className="px-4 py-2.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold cursor-pointer"
+                >
+                  Reset Local Fleet Defaults
+                </button>
                 {settingsSaved && (
                   <span className="text-xs text-emerald-700 font-semibold">
                     Settings updated across all pages!
@@ -1220,22 +1694,33 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="lg:col-span-5 bg-[#151515] text-white rounded-2xl p-6 border border-neutral-800 space-y-4">
-              <div className="flex items-center gap-2 text-[#FFD21F]">
-                <Database className="w-5 h-5" />
-                <h3 className="font-display font-bold text-base">
-                  Database & Firebase Connection Status
-                </h3>
+            <div className="lg:col-span-6 bg-[#151515] text-white rounded-2xl p-6 border border-neutral-800 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-[#FFD21F]">
+                  <Database className="w-5 h-5" />
+                  <h3 className="font-display font-bold text-base">
+                    Supabase SQL Setup & RLS Policies
+                  </h3>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(SUPABASE_SQL_SCHEMA);
+                    setSqlCopied(true);
+                    setTimeout(() => setSqlCopied(false), 2500);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#242424] hover:bg-neutral-700 text-xs text-[#FFD21F] cursor-pointer"
+                >
+                  {sqlCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{sqlCopied ? 'Copied SQL' : 'Copy SQL'}</span>
+                </button>
               </div>
               <p className="text-xs text-neutral-300 leading-relaxed">
-                {isFirebaseConfigured()
-                  ? 'Connected to live Firebase project.'
-                  : 'Currently running in browser persistence mode (localStorage). To connect a live Firebase Firestore & Auth project, set the VITE_FIREBASE_* environment variables in .env or src/lib/firebaseConfigPlaceholder.ts:'}
+                Connected to Supabase as <strong>{adminUser.email}</strong>. Run the SQL below in
+                your Supabase SQL Editor to ensure the <code className="text-[#FFD21F]">enquiries</code>{' '}
+                and <code className="text-[#FFD21F]">blogs</code> tables and RLS policies are active:
               </p>
-              <pre className="p-3 rounded-lg bg-[#242424] text-[11px] font-mono-num text-neutral-300 overflow-x-auto border border-neutral-700">
-{`VITE_FIREBASE_API_KEY=${FIREBASE_CONFIG_PLACEHOLDER.apiKey}
-VITE_FIREBASE_PROJECT_ID=${FIREBASE_CONFIG_PLACEHOLDER.projectId}
-VITE_FIREBASE_AUTH_DOMAIN=${FIREBASE_CONFIG_PLACEHOLDER.authDomain}`}
+              <pre className="p-3 rounded-lg bg-[#242424] text-[11px] font-mono-num text-neutral-300 overflow-x-auto max-h-72 border border-neutral-700">
+                {SUPABASE_SQL_SCHEMA}
               </pre>
             </div>
           </div>

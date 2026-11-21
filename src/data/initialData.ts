@@ -789,6 +789,7 @@ export const INITIAL_BLOGS: BlogPost[] = [
     slug: 'complete-guide-luxury-car-rental-kolkata-weddings-events',
     title: 'Complete Guide to Hiring a Luxury Car in Kolkata for Weddings & VIP Events',
     category: 'Car Rental Guides',
+    cover_image: ASSET_IMAGES.weddingCar,
     excerpt:
       'Planning a grand wedding ceremony or hosting corporate dignitaries in Kolkata? Learn how to choose the right chauffeur-driven BMW, Audi, or Mercedes-Benz sedan.',
     content: [
@@ -796,11 +797,10 @@ export const INITIAL_BLOGS: BlogPost[] = [
       'At Ghosh Travels, our luxury fleet includes the BMW 5 Series, BMW 7 Series, Audi A6, Audi Q7, and Mercedes-Benz E-Class. Each vehicle is thoroughly detailed before dispatch and driven by an experienced, uniformed chauffeur familiar with Kolkata’s ceremonial venues and business corridors.',
       'When booking a wedding car in Kolkata, we recommend reserving your preferred model at least 2 to 3 weeks in advance during peak wedding months (November to February). If you require floral ribbon decoration on the hood, mention your colour palette when submitting your enquiry so our team can coordinate the setup prior to pickup.',
       'For local Kolkata luxury bookings, our standard base package covers 10 Hours / 100 KM (ranging from ₹16,000 to ₹24,000 depending on the flagship model), giving you ample flexibility for pre-wedding photography, baraat arrival, and bidaai transfers.',
-    ],
+    ].join('\n\n'),
     author: 'Ghosh Travels Editorial Desk',
-    publishedAt: 'October 14, 2026',
-    readTime: '4 min read',
-    image: ASSET_IMAGES.weddingCar,
+    created_at: '2026-10-14T10:00:00Z',
+    read_time: '4 min read',
     published: true,
   },
   {
@@ -808,6 +808,7 @@ export const INITIAL_BLOGS: BlogPost[] = [
     slug: 'kolkata-to-digha-mandarmani-road-trip-vehicle-guide',
     title: 'Kolkata to Digha & Mandarmani Road Trip: Choosing Between an SUV and a Tempo Traveller',
     category: 'Outstation Guides',
+    cover_image: ASSET_IMAGES.tempoTraveller,
     excerpt:
       'Planning a coastal weekend getaway from Kolkata with family or colleagues? Compare seating comfort, luggage space, and highway convenience for Digha and Mandarmani.',
     content: [
@@ -815,11 +816,10 @@ export const INITIAL_BLOGS: BlogPost[] = [
       'For families of 4 to 6 passengers, an SUV or MUV such as the Toyota Innova, Toyota Fortuner, or Mahindra XUV offers plush suspension, generous boot space, and effortless highway cruising.',
       'When travelling with 8 to 25 people—such as joint families, neighbourhood clubs, or corporate offsite teams—booking a single 13-seater Tata Winger or a 16/20/26-seater AC Tempo Traveller keeps everyone together in one vehicle, making the road trip far more enjoyable and economical than splitting into multiple small cars.',
       'Reach out to Ghosh Travels with your travel dates, pickup address in Kolkata, and headcount to receive a customized round-trip outstation quotation.',
-    ],
+    ].join('\n\n'),
     author: 'Ghosh Travels Editorial Desk',
-    publishedAt: 'November 02, 2026',
-    readTime: '5 min read',
-    image: ASSET_IMAGES.tempoTraveller,
+    created_at: '2026-11-02T10:00:00Z',
+    read_time: '5 min read',
     published: true,
   },
   {
@@ -827,17 +827,17 @@ export const INITIAL_BLOGS: BlogPost[] = [
     slug: 'corporate-car-rental-fleet-management-kolkata-businesses',
     title: 'Why Growing Businesses in Kolkata Prefer Dedicated Corporate Car Rental Partners',
     category: 'Kolkata Travel',
+    cover_image: ASSET_IMAGES.chauffeurCorporate,
     excerpt:
       'From Netaji Subhash Chandra Bose International Airport pickups to multi-day conference shuttles, discover how structured fleet management streamlines corporate mobility.',
     content: [
       'Coordinate-heavy corporate events, visiting international delegates, and daily executive movements require absolute punctuality. Relying on ad-hoc ride-hailing apps during peak office hours in Salt Lake Sector V, Rajarhat, or Park Street often leads to last-minute cancellations and inconsistent vehicle quality.',
       'Under the management of Mr. Partha Ghosh, Ghosh Travels partners with government-sponsored agencies, institutional bodies, and B2C enterprises to deliver dependable corporate transportation across Kolkata.',
       'Our corporate desk provides a unified solution covering executive sedans (Toyota Camry, Corolla Altis, Honda City), luxury cars for board members, and AC Volvo coaches for seminar delegates—backed by transparent billing and 24/7 dispatch coordination.',
-    ],
+    ].join('\n\n'),
     author: 'Ghosh Travels Editorial Desk',
-    publishedAt: 'November 10, 2026',
-    readTime: '4 min read',
-    image: ASSET_IMAGES.chauffeurCorporate,
+    created_at: '2026-11-10T10:00:00Z',
+    read_time: '4 min read',
     published: true,
   },
   {
@@ -845,17 +845,17 @@ export const INITIAL_BLOGS: BlogPost[] = [
     slug: 'pilgrimage-road-trip-kolkata-to-tarapith-and-puri',
     title: 'Planning a Comfortable Family Pilgrimage from Kolkata to Tarapith or Puri',
     category: 'Travel Tips',
+    cover_image: ASSET_IMAGES.volvoCoach,
     excerpt:
       'Helpful travel tips for senior citizens and families booking chauffeur-driven cars or mini buses for temple visits to Tarapith and Jagannath Puri.',
     content: [
       'Spiritual journeys with elders and children call for patient, experienced chauffeurs and well-maintained air-conditioned vehicles. Two of the most requested pilgrimage routes from Kolkata are Maa Tara Temple in Tarapith (Birbhum) and Shree Jagannath Temple in Puri (Odisha).',
       'For a Tarapith trip, departing Kolkata around 5:30 AM via NH19 allows you to complete darshan comfortably and optionally visit Bolpur Shantiniketan on the return leg.',
       'For Puri, Konark, and Bhubaneswar excursions, our 16 to 26 seater Tempo Travellers and Chartered AC Volvo Coaches are ideal for large family groups and cultural associations.',
-    ],
+    ].join('\n\n'),
     author: 'Ghosh Travels Editorial Desk',
-    publishedAt: 'November 15, 2026',
-    readTime: '4 min read',
-    image: ASSET_IMAGES.volvoCoach,
+    created_at: '2026-11-15T10:00:00Z',
+    read_time: '4 min read',
     published: true,
   },
 ];
@@ -887,7 +887,7 @@ export const INITIAL_ENQUIRIES: EnquiryRecord[] = [
     id: 'enq-1002',
     referenceNumber: 'GT-2026-4895',
     createdAt: '2026-11-16 18:05',
-    status: 'Pending',
+    status: 'Contacted',
     sourcePage: 'Mini Bus Rental Service Page',
     customerName: 'Ananya Sengupta',
     phone: '+91-9874112233',

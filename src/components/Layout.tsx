@@ -21,7 +21,7 @@ export const GhoshLogo: React.FC<{ className?: string }> = ({ className = '' }) 
       <img
         src="/assets/aistudio/logo__1___1__773f483a.png"
         alt="Ghosh Travels"
-        className="h-9 md:h-10 w-auto object-contain"
+        className="h-[25px] md:h-7 w-auto object-contain"
       />
     </span>
   );

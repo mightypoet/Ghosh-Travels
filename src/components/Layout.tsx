@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { EnquiryRecord, PageId } from '../types';
+import BookCallButton from './ui/glossy-slider-call-button';
 
 export const GhoshLogo: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
@@ -529,12 +530,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
           {/* Zone 3: 1 Primary Action */}
           <div className="flex items-center gap-3 shrink-0">
-            <button
+            <BookCallButton
+              label="Book Your Cab"
               onClick={() => handleNavClick('booking')}
-              className="px-5 py-2.5 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-sm"
-            >
-              Book Your Cab
-            </button>
+            />
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

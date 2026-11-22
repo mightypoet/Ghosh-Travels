@@ -425,9 +425,9 @@ export const HomePage: React.FC = () => {
               </div>
 
               {/* Fixed-Height Two-Column Interactive Showcase */}
-              <div className="rounded-2xl bg-[#1a1a1a]/90 border border-neutral-800 p-5 sm:p-7 lg:h-[460px] grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch shadow-2xl">
+              <div className="rounded-2xl bg-[#1a1a1a]/90 border border-neutral-800 p-5 sm:p-7 lg:h-[460px] grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-0 items-stretch shadow-2xl">
                 {/* Left Side: Vertical Wheel Selector */}
-                <div className="lg:col-span-5 flex flex-col justify-between">
+                <div className="lg:col-span-5 flex flex-col justify-between relative lg:z-20 lg:-mr-px">
                   <div
                     ref={wheelContainerRef}
                     tabIndex={0}
@@ -453,7 +453,7 @@ export const HomePage: React.FC = () => {
                         rotateWheel(dy > 0 ? 1 : -1);
                       }
                     }}
-                    className="relative h-[340px] lg:h-full w-full overflow-hidden select-none focus:outline-none rounded-xl"
+                    className="relative h-[340px] lg:h-full w-full overflow-hidden select-none focus:outline-none rounded-xl lg:rounded-r-none"
                   >
                     {/* Top & Bottom Gradient Masks */}
                     <div
@@ -478,7 +478,7 @@ export const HomePage: React.FC = () => {
                       const opacity =
                         isCenter ? 1 : absOffset === 1 ? 0.42 : absOffset === 2 ? 0.24 : 0;
                       const scale =
-                        isCenter ? 1.03 : absOffset === 1 ? 0.94 : absOffset === 2 ? 0.87 : 0.82;
+                        isCenter ? 1.02 : absOffset === 1 ? 0.94 : absOffset === 2 ? 0.87 : 0.82;
                       const translateY = offset * 66;
 
                       return (
@@ -494,14 +494,14 @@ export const HomePage: React.FC = () => {
                             opacity,
                             transform: `translate3d(0, calc(-50% + ${translateY}px), 0) scale(${scale})`,
                             transition:
-                              'transform 380ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease, border-color 250ms ease, background-color 250ms ease',
+                              'transform 380ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease, right 320ms cubic-bezier(0.22, 1, 0.36, 1), border-color 250ms ease, background-color 250ms ease',
                           }}
-                          className={`absolute left-3 right-3 top-1/2 h-[56px] px-4 rounded-xl border flex items-center justify-between gap-3 text-left origin-center will-change-transform ${
+                          className={`absolute left-3 top-1/2 h-[56px] px-4 border flex items-center justify-between gap-3 text-left origin-center lg:origin-right will-change-transform ${
                             absOffset >= 3 ? 'pointer-events-none' : 'cursor-pointer'
                           } ${
                             isCenter
-                              ? 'bg-[#242424] border-[#FFD21F] shadow-[0_10px_28px_-8px_rgba(255,210,31,0.3)] z-10'
-                              : 'bg-[#151515]/90 border-neutral-800/90 hover:border-neutral-600'
+                              ? 'right-3 lg:right-0 rounded-xl lg:rounded-r-none bg-[#232323] border-[#FFD21F]/85 lg:border-r-0 shadow-[0_10px_28px_-8px_rgba(255,210,31,0.28)] z-10'
+                              : 'right-3 lg:right-4 rounded-xl bg-[#151515]/90 border-neutral-800/90 hover:border-neutral-600'
                           }`}
                         >
                           <div className="flex items-center gap-3.5 min-w-0">
@@ -533,10 +533,10 @@ export const HomePage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right Side: Active Category Card */}
-                <div className="lg:col-span-7 h-full">
+                {/* Right Side: Active Category Card (Joined with Active Wheel Item) */}
+                <div className="lg:col-span-7 h-full relative z-10">
                   {activeItem && (
-                    <div className="h-full rounded-xl bg-gradient-to-br from-[#232323] via-[#1b1b1b] to-[#151515] border border-neutral-800 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden">
+                    <div className="h-full rounded-xl bg-gradient-to-br from-[#232323] via-[#1c1c1c] to-[#161616] border border-[#FFD21F]/85 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-xl">
                       {/* Subtle Executive Accent Line */}
                       <div
                         aria-hidden="true"

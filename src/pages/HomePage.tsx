@@ -496,7 +496,7 @@ export const HomePage: React.FC = () => {
                             transition:
                               'transform 380ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease, right 320ms cubic-bezier(0.22, 1, 0.36, 1), border-color 250ms ease, background-color 250ms ease',
                           }}
-                          className={`absolute left-3 top-1/2 h-[56px] px-4 border flex items-center justify-between gap-3 text-left origin-center lg:origin-right will-change-transform ${
+                          className={`absolute left-3 top-1/2 h-[56px] px-4 border flex items-center justify-between gap-3 text-left origin-center lg:origin-right will-change-transform overflow-hidden ${
                             absOffset >= 3 ? 'pointer-events-none' : 'cursor-pointer'
                           } ${
                             isCenter
@@ -504,7 +504,21 @@ export const HomePage: React.FC = () => {
                               : 'right-3 lg:right-4 rounded-xl bg-[#151515]/90 border-neutral-800/90 hover:border-neutral-600'
                           }`}
                         >
-                          <div className="flex items-center gap-3.5 min-w-0">
+                          {isCenter && (
+                            <>
+                              <img
+                                src="/assets/aistudio/image_2cbc30a2.png"
+                                alt=""
+                                aria-hidden="true"
+                                className="absolute inset-0 w-full h-full object-cover object-center opacity-75 pointer-events-none"
+                              />
+                              <span
+                                aria-hidden="true"
+                                className="absolute inset-0 bg-gradient-to-r from-[#151515]/70 via-[#151515]/35 to-transparent pointer-events-none"
+                              />
+                            </>
+                          )}
+                          <div className="relative z-10 flex items-center gap-3.5 min-w-0">
                             <span
                               className={`font-mono-num text-xs font-bold px-2.5 py-1 rounded-md shrink-0 transition-colors ${
                                 isCenter
@@ -516,14 +530,16 @@ export const HomePage: React.FC = () => {
                             </span>
                             <span
                               className={`font-display font-bold text-sm sm:text-base truncate transition-colors ${
-                                isCenter ? 'text-white' : 'text-neutral-300'
+                                isCenter
+                                  ? 'text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]'
+                                  : 'text-neutral-300'
                               }`}
                             >
                               {item.title}
                             </span>
                           </div>
                           <span
-                            className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all ${
+                            className={`relative z-10 w-1.5 h-1.5 rounded-full shrink-0 transition-all ${
                               isCenter ? 'bg-[#FFD21F] scale-125' : 'bg-neutral-700'
                             }`}
                           />
@@ -536,11 +552,22 @@ export const HomePage: React.FC = () => {
                 {/* Right Side: Active Category Card (Joined with Active Wheel Item) */}
                 <div className="lg:col-span-7 h-full relative z-10">
                   {activeItem && (
-                    <div className="h-full rounded-xl bg-gradient-to-br from-[#232323] via-[#1c1c1c] to-[#161616] border border-[#FFD21F]/85 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-xl">
+                    <div className="h-full rounded-xl bg-[#161616] border border-[#FFD21F]/85 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-xl">
+                      <img
+                        src="/assets/aistudio/image_2cbc30a2.png"
+                        alt=""
+                        aria-hidden="true"
+                        className="absolute inset-0 w-full h-full object-cover object-center opacity-75 pointer-events-none"
+                      />
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0 bg-gradient-to-r from-[#151515]/85 via-[#151515]/60 to-[#151515]/35 pointer-events-none"
+                      />
+
                       {/* Subtle Executive Accent Line */}
                       <div
                         aria-hidden="true"
-                        className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD21F] via-[#E9AD18] to-transparent"
+                        className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD21F] via-[#E9AD18] to-transparent z-10"
                       />
 
                       <AnimatePresence mode="wait" initial={false}>
@@ -550,42 +577,42 @@ export const HomePage: React.FC = () => {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: wheelDirection > 0 ? -12 : 12 }}
                           transition={{ duration: 0.24, ease: 'easeOut' }}
-                          className="space-y-4 my-auto"
+                          className="relative z-10 space-y-4 my-auto"
                         >
                           <div className="flex items-center justify-between gap-3">
-                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#FFD21F]/15 border border-[#FFD21F]/40 text-[#FFD21F] font-mono-num text-xs font-bold">
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#151515]/80 border border-[#FFD21F]/50 text-[#FFD21F] font-mono-num text-xs font-bold backdrop-blur-xs">
                               <span>{String(activeIdx + 1).padStart(2, '0')}</span>
                               <span className="text-neutral-400">·</span>
                               <span className="font-display uppercase tracking-wider text-[11px]">
                                 Featured Vertical
                               </span>
                             </span>
-                            <span className="text-xs text-neutral-500 font-mono-num hidden sm:inline">
+                            <span className="text-xs text-neutral-300 font-mono-num hidden sm:inline drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                               Ghosh Travels Kolkata
                             </span>
                           </div>
 
                           <div className="space-y-2">
-                            <h3 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight">
+                            <h3 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
                               {activeItem.title}
                             </h3>
-                            <p className="text-sm sm:text-base font-bold text-[#FFD21F]">
+                            <p className="text-sm sm:text-base font-bold text-[#FFD21F] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
                               {activeItem.shortDescription}
                             </p>
                           </div>
 
-                          <p className="text-sm text-neutral-300 leading-relaxed">
+                          <p className="text-sm text-neutral-100 leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
                             {activeItem.fullDescription}
                           </p>
                         </motion.div>
                       </AnimatePresence>
 
                       {/* Action Buttons */}
-                      <div className="pt-6 mt-6 border-t border-neutral-800 flex flex-wrap items-center gap-3">
+                      <div className="relative z-10 pt-6 mt-6 border-t border-white/15 flex flex-wrap items-center gap-3">
                         <button
                           type="button"
                           onClick={() => navigate(activeItem.id)}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-[#FFD21F]/70 hover:border-[#FFD21F] text-[#FFD21F] hover:bg-[#FFD21F]/10 font-display font-bold text-xs sm:text-sm transition-colors cursor-pointer whitespace-nowrap"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#151515]/70 border border-[#FFD21F]/80 hover:border-[#FFD21F] text-[#FFD21F] hover:bg-[#151515]/90 font-display font-bold text-xs sm:text-sm transition-colors cursor-pointer whitespace-nowrap backdrop-blur-xs"
                         >
                           <span>View Details</span>
                           <ArrowRight className="w-4 h-4" />

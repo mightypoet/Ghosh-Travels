@@ -46,7 +46,7 @@ export default function BookCallButton({
           top: 3px;
           bottom: 3px;
           width: 34px;
-          background: linear-gradient(180deg, #A4FF3B, #72D80B);
+          background-color: #ffca00;
           border-radius: 999px;
           transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
           display: flex;

@@ -19,6 +19,7 @@ import {
   Users,
 } from 'lucide-react';
 import { ResilientImage } from '../components/ResilientImage';
+import { BookACallButton } from '../components/ui/book-a-call-button';
 import { useApp } from '../context/AppContext';
 import { ASSET_IMAGES, POPULAR_DESTINATIONS, SAMPLE_TESTIMONIALS } from '../data/initialData';
 import { EnquiryRecord } from '../types';
@@ -283,21 +284,17 @@ export const HomePage: React.FC = () => {
 
               {/* Primary & Secondary CTAs */}
               <div className="flex flex-wrap items-center gap-4 pt-2">
-                <button
-                  onClick={() =>
+                <BookACallButton
+                  label="BOOK YOUR CAR"
+                  style={{ backgroundImage: 'none', backgroundColor: '#ffce00' }}
+                  onBookCall={() =>
                     navigate('booking', {
                       selectedService:
                         services.find((s) => s.id === currentSlide.serviceTarget)?.title ||
                         'Luxury Car Rental',
                     })
                   }
-                  className="group inline-flex items-center gap-3 pr-6 pl-2 py-2 rounded-full bg-[#151515] hover:bg-[#242424] text-white font-display font-bold text-xs sm:text-sm tracking-wide transition-colors cursor-pointer shadow-md whitespace-nowrap"
-                >
-                  <span className="w-8 h-8 rounded-full bg-[#FFD21F] text-[#151515] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
-                    <ArrowRight className="w-4 h-4" />
-                  </span>
-                  <span>{currentSlide.primaryCtaText}</span>
-                </button>
+                />
 
                 <button
                   onClick={() => navigate('fleet')}
@@ -885,7 +882,7 @@ export const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
             <div>
-              <p className="text-xs font-display font-bold uppercase tracking-wider text-[#FFD21F]">
+              <p className="text-[12px] font-display font-bold uppercase tracking-wider text-[#FFD21F]">
                 Outstation Road Trips from Kolkata
               </p>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-white mt-1">

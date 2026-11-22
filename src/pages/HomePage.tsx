@@ -504,10 +504,39 @@ export const HomePage: React.FC = () => {
                               : 'right-3 lg:right-4 rounded-xl bg-[#151515]/90 border-neutral-800/90 hover:border-neutral-600'
                           }`}
                         >
-                          {isCenter && (
+                          {(item.id === 'service-luxury-car' ||
+                            item.title === 'Luxury Car Rental' ||
+                            item.id === 'service-premium-car' ||
+                            item.title === 'Premium Car Rental' ||
+                            item.id === 'service-luxury-coach' ||
+                            item.title === 'Luxury Coach Rental' ||
+                            item.id === 'service-mini-bus' ||
+                            item.title === 'Mini Bus Rental' ||
+                            item.id === 'service-corporate' ||
+                            item.title === 'Corporate Car Booking' ||
+                            item.id === 'service-wedding-car' ||
+                            item.title === 'Wedding Car Rental' ||
+                            isCenter) && (
                             <>
                               <img
-                                src="/assets/aistudio/image_2cbc30a2.png"
+                                src={
+                                  item.id === 'service-luxury-car' ||
+                                  item.title === 'Luxury Car Rental'
+                                    ? '/assets/aistudio/image_257c112d.png'
+                                    : item.id === 'service-luxury-coach' ||
+                                        item.title === 'Luxury Coach Rental'
+                                      ? '/assets/aistudio/image_9b3d0b4b.png'
+                                      : item.id === 'service-mini-bus' ||
+                                          item.title === 'Mini Bus Rental'
+                                        ? '/assets/aistudio/image_46ce2a8d.png'
+                                        : item.id === 'service-corporate' ||
+                                            item.title === 'Corporate Car Booking'
+                                          ? '/assets/aistudio/image_190dc962.png'
+                                          : item.id === 'service-wedding-car' ||
+                                              item.title === 'Wedding Car Rental'
+                                            ? '/assets/aistudio/image_9ae947b6.png'
+                                            : '/assets/aistudio/image_2cbc30a2.png'
+                                }
                                 alt=""
                                 aria-hidden="true"
                                 className="absolute inset-0 w-full h-full object-cover object-center opacity-75 pointer-events-none"
@@ -554,7 +583,24 @@ export const HomePage: React.FC = () => {
                   {activeItem && (
                     <div className="h-full rounded-xl bg-[#161616] border border-[#FFD21F]/85 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-xl">
                       <img
-                        src="/assets/aistudio/image_2cbc30a2.png"
+                        src={
+                          activeItem.id === 'service-luxury-car' ||
+                          activeItem.title === 'Luxury Car Rental'
+                            ? '/assets/aistudio/image_257c112d.png'
+                            : activeItem.id === 'service-luxury-coach' ||
+                                activeItem.title === 'Luxury Coach Rental'
+                              ? '/assets/aistudio/image_9b3d0b4b.png'
+                              : activeItem.id === 'service-mini-bus' ||
+                                  activeItem.title === 'Mini Bus Rental'
+                                ? '/assets/aistudio/image_46ce2a8d.png'
+                                : activeItem.id === 'service-corporate' ||
+                                    activeItem.title === 'Corporate Car Booking'
+                                  ? '/assets/aistudio/image_190dc962.png'
+                                  : activeItem.id === 'service-wedding-car' ||
+                                      activeItem.title === 'Wedding Car Rental'
+                                    ? '/assets/aistudio/image_9ae947b6.png'
+                                    : '/assets/aistudio/image_2cbc30a2.png'
+                        }
                         alt=""
                         aria-hidden="true"
                         className="absolute inset-0 w-full h-full object-cover object-center opacity-75 pointer-events-none"

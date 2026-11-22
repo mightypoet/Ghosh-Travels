@@ -17,13 +17,12 @@ import { EnquiryRecord, PageId } from '../types';
 
 export const GhoshLogo: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
-    <span className={`inline-flex items-center gap-2.5 whitespace-nowrap shrink-0 ${className}`}>
-      <span className="inline-flex items-center justify-center w-9 h-9 rounded-full border-2 border-[#FFD21F] bg-[#151515] text-[#FFD21F] font-display font-extrabold text-sm tracking-tighter">
-        GT
-      </span>
-      <span className="font-display font-extrabold text-xl tracking-tight text-[#FFD21F]">
-        Ghosh <span className="text-white">Travels</span>
-      </span>
+    <span className={`inline-flex items-center whitespace-nowrap shrink-0 ${className}`}>
+      <img
+        src="/assets/aistudio/logo__1___1__773f483a.png"
+        alt="Ghosh Travels"
+        className="h-9 md:h-10 w-auto object-contain"
+      />
     </span>
   );
 };

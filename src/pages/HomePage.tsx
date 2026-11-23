@@ -35,12 +35,15 @@ export const HomePage: React.FC = () => {
   } = useApp();
 
   const [activeSlide, setActiveSlide] = useState(0);
+  const [heroPaused, setHeroPaused] = useState(false);
   const [wheelStep, setWheelStep] = useState(0);
   const [wheelDirection, setWheelDirection] = useState<1 | -1>(1);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const wheelContainerRef = useRef<HTMLDivElement | null>(null);
   const lastWheelTimeRef = useRef<number>(0);
   const touchStartYRef = useRef<number | null>(null);
+  const heroTouchStartXRef = useRef<number | null>(null);
+  const testimonialTouchStartXRef = useRef<number | null>(null);
 
   const rotateWheel = useCallback((delta: number) => {
     if (delta === 0) return;
@@ -78,11 +81,12 @@ export const HomePage: React.FC = () => {
   const slides = siteSettings.heroSlides;
 
   useEffect(() => {
+    if (heroPaused) return;
     const timer = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [slides.length, heroPaused]);
 
   const currentSlide = slides[activeSlide] || slides[0];
 
@@ -239,7 +243,20 @@ export const HomePage: React.FC = () => {
   return (
     <div>
       {/* SECTION 1: HERO BANNER SLIDER (Inspired directly by screenshot) */}
-      <section className="relative overflow-hidden bg-[#F4F4F4] border-b border-neutral-200">
+      <section
+        onMouseEnter={() => setHeroPaused(true)}
+        onMouseLeave={() => setHeroPaused(false)}
+        onFocusCapture={() => setHeroPaused(true)}
+        onBlurCapture={() => setHeroPaused(false)}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowRight') {
+            setActiveSlide((prev) => (prev + 1) % slides.length);
+          } else if (e.key === 'ArrowLeft') {
+            setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
+          }
+        }}
+        className="relative overflow-hidden bg-[#F4F4F4] border-b border-neutral-200"
+      >
         {/* Subtle geometric yellow pillar & diagonal accent matching the original Ghosh Travels hero */}
         <div
           aria-hidden="true"
@@ -316,7 +333,24 @@ export const HomePage: React.FC = () => {
 
             {/* Right Vehicle Image Column */}
             <div className="lg:col-span-6 relative flex items-center justify-center">
-              <div className="relative w-full aspect-16/10 rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-[#151515]">
+              <div
+                onTouchStart={(e) => {
+                  heroTouchStartXRef.current = e.touches[0].clientX;
+                }}
+                onTouchEnd={(e) => {
+                  if (heroTouchStartXRef.current === null) return;
+                  const dx = heroTouchStartXRef.current - e.changedTouches[0].clientX;
+                  heroTouchStartXRef.current = null;
+                  if (Math.abs(dx) > 36) {
+                    setActiveSlide((prev) =>
+                      dx > 0
+                        ? (prev + 1) % slides.length
+                        : (prev - 1 + slides.length) % slides.length
+                    );
+                  }
+                }}
+                className="relative w-full aspect-16/10 rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-[#151515]"
+              >
                 <ResilientImage
                   src={currentSlide.image}
                   alt={`${currentSlide.headlineHighlight} ${currentSlide.headlineLine3} – Ghosh Travels Kolkata`}
@@ -405,7 +439,7 @@ export const HomePage: React.FC = () => {
                       type="button"
                       onClick={() => rotateWheel(-1)}
                       aria-label="Rotate category wheel up"
-                      className="w-9 h-9 rounded-lg bg-[#242424] border border-neutral-700 hover:border-[#FFD21F] hover:text-[#FFD21F] text-white flex items-center justify-center transition-colors cursor-pointer"
+                      className="w-11 h-11 lg:w-9 lg:h-9 rounded-lg bg-[#242424] border border-neutral-700 hover:border-[#FFD21F] hover:text-[#FFD21F] active:scale-95 text-white flex items-center justify-center transition-all cursor-pointer"
                     >
                       <ChevronUp className="w-4 h-4" />
                     </button>
@@ -413,7 +447,7 @@ export const HomePage: React.FC = () => {
                       type="button"
                       onClick={() => rotateWheel(1)}
                       aria-label="Rotate category wheel down"
-                      className="w-9 h-9 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] flex items-center justify-center transition-colors cursor-pointer"
+                      className="w-11 h-11 lg:w-9 lg:h-9 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] active:scale-95 text-[#151515] flex items-center justify-center transition-all cursor-pointer"
                     >
                       <ChevronDown className="w-4 h-4" />
                     </button>
@@ -437,6 +471,11 @@ export const HomePage: React.FC = () => {
                       } else if (e.key === 'ArrowUp') {
                         e.preventDefault();
                         rotateWheel(-1);
+                      } else if (e.key === 'Enter' || e.key === ' ') {
+                        if (activeItem) {
+                          e.preventDefault();
+                          navigate(activeItem.id);
+                        }
                       }
                     }}
                     onTouchStart={(e) => {
@@ -450,7 +489,7 @@ export const HomePage: React.FC = () => {
                         rotateWheel(dy > 0 ? 1 : -1);
                       }
                     }}
-                    className="relative h-[340px] lg:h-full w-full overflow-hidden select-none focus:outline-none rounded-xl lg:rounded-r-none"
+                    className="relative h-[340px] lg:h-full w-full overflow-hidden select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD21F]/60 rounded-xl lg:rounded-r-none"
                   >
                     {/* Top & Bottom Gradient Masks */}
                     <div
@@ -485,7 +524,11 @@ export const HomePage: React.FC = () => {
                           role="option"
                           aria-selected={isCenter}
                           onClick={() => {
-                            if (offset !== 0) rotateWheel(offset);
+                            if (offset !== 0) {
+                              rotateWheel(offset);
+                            } else {
+                              navigate(item.id);
+                            }
                           }}
                           style={{
                             opacity,
@@ -896,7 +939,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {POPULAR_DESTINATIONS.map((dest) => (
+            {POPULAR_DESTINATIONS.map((dest, idx) => (
               <div
                 key={dest.id}
                 className="rounded-xl bg-[#242424] border border-neutral-800 overflow-hidden flex flex-col justify-between"
@@ -904,7 +947,17 @@ export const HomePage: React.FC = () => {
                 <div>
                   <div className="aspect-4/3 relative overflow-hidden">
                     <ResilientImage
-                      src={dest.image}
+                      src={
+                        idx === 0
+                          ? '/assets/aistudio/___________________________1_2ba18365.png'
+                          : idx === 1
+                            ? '/assets/aistudio/_______________________f5c42d21.png'
+                            : idx === 2
+                              ? '/assets/aistudio/_______________________-____________289e290c.png'
+                              : idx === 3
+                                ? '/assets/aistudio/________________________________dc632974.png'
+                                : dest.image
+                      }
                       alt={`${dest.name} Outstation Car Rental from Kolkata`}
                       className="w-full h-full object-cover"
                     />
@@ -962,7 +1015,24 @@ export const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-8 md:p-10 border border-neutral-200 shadow-sm relative">
+          <div
+            onTouchStart={(e) => {
+              testimonialTouchStartXRef.current = e.touches[0].clientX;
+            }}
+            onTouchEnd={(e) => {
+              if (testimonialTouchStartXRef.current === null) return;
+              const dx = testimonialTouchStartXRef.current - e.changedTouches[0].clientX;
+              testimonialTouchStartXRef.current = null;
+              if (Math.abs(dx) > 36) {
+                setActiveTestimonial((prev) =>
+                  dx > 0
+                    ? (prev + 1) % SAMPLE_TESTIMONIALS.length
+                    : (prev - 1 + SAMPLE_TESTIMONIALS.length) % SAMPLE_TESTIMONIALS.length
+                );
+              }
+            }}
+            className="bg-white rounded-2xl p-6 sm:p-8 md:p-10 border border-neutral-200 shadow-sm relative"
+          >
             <div className="flex items-center gap-1 text-[#E9AD18] mb-4">
               {Array.from({ length: SAMPLE_TESTIMONIALS[activeTestimonial].rating }).map((_, i) => (
                 <Star key={i} className="w-4 h-4 fill-current" />
@@ -986,27 +1056,46 @@ export const HomePage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() =>
-                    setActiveTestimonial(
-                      (prev) => (prev - 1 + SAMPLE_TESTIMONIALS.length) % SAMPLE_TESTIMONIALS.length
-                    )
-                  }
-                  aria-label="Previous testimonial"
-                  className="p-2 rounded-lg border border-neutral-300 hover:bg-[#151515] hover:text-[#FFD21F] transition-colors cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() =>
-                    setActiveTestimonial((prev) => (prev + 1) % SAMPLE_TESTIMONIALS.length)
-                  }
-                  aria-label="Next testimonial"
-                  className="p-2 rounded-lg border border-neutral-300 hover:bg-[#151515] hover:text-[#FFD21F] transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+              <div className="flex items-center justify-between sm:justify-end gap-3">
+                <div className="flex items-center gap-1.5">
+                  {SAMPLE_TESTIMONIALS.map((t, idx) => (
+                    <button
+                      key={t.name}
+                      type="button"
+                      onClick={() => setActiveTestimonial(idx)}
+                      aria-label={`View testimonial ${idx + 1}`}
+                      className={`h-2 rounded-full transition-all cursor-pointer ${
+                        activeTestimonial === idx
+                          ? 'w-6 bg-[#151515]'
+                          : 'w-2 bg-neutral-300 hover:bg-neutral-400'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveTestimonial(
+                        (prev) => (prev - 1 + SAMPLE_TESTIMONIALS.length) % SAMPLE_TESTIMONIALS.length
+                      )
+                    }
+                    aria-label="Previous testimonial"
+                    className="w-11 h-11 sm:w-9 sm:h-9 rounded-lg border border-neutral-300 hover:bg-[#151515] hover:text-[#FFD21F] active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveTestimonial((prev) => (prev + 1) % SAMPLE_TESTIMONIALS.length)
+                    }
+                    aria-label="Next testimonial"
+                    className="w-11 h-11 sm:w-9 sm:h-9 rounded-lg border border-neutral-300 hover:bg-[#151515] hover:text-[#FFD21F] active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -772,6 +772,20 @@ export const FleetPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [detailVehicle, setDetailVehicle] = useState<VehicleItem | null>(null);
 
+  React.useEffect(() => {
+    if (!detailVehicle) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDetailVehicle(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [detailVehicle]);
+
   const categories: Array<'All' | VehicleCategoryKey> = [
     'All',
     'Hatchbacks & Sedans',
@@ -918,7 +932,7 @@ export const FleetPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="px-6 py-4 bg-[#F4F4F4] border-t border-neutral-200 flex items-center justify-between gap-2">
+                <div className="px-4 sm:px-6 py-4 bg-[#F4F4F4] border-t border-neutral-200 flex flex-wrap items-center justify-between gap-2">
                   <button
                     onClick={() => setDetailVehicle(vehicle)}
                     className="px-3.5 py-2 rounded-lg border border-neutral-300 bg-white hover:border-[#151515] text-xs font-display font-bold text-[#151515] transition-colors cursor-pointer whitespace-nowrap"
@@ -960,14 +974,17 @@ export const FleetPage: React.FC = () => {
       {/* Vehicle Detail Modal */}
       {detailVehicle && (
         <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setDetailVehicle(null);
+          }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 overflow-y-auto"
           role="dialog"
           aria-modal="true"
         >
-          <div className="relative w-full max-w-lg rounded-2xl bg-white text-[#151515] overflow-hidden shadow-2xl">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white text-[#151515] overflow-y-auto max-h-[92vh] my-auto shadow-2xl">
             <button
               onClick={() => setDetailVehicle(null)}
-              className="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/60 text-white hover:bg-black transition-colors"
+              className="absolute top-3 right-3 z-10 min-w-[40px] min-h-[40px] p-2 rounded-full bg-black/60 text-white hover:bg-black transition-colors flex items-center justify-center cursor-pointer"
               aria-label="Close vehicle details"
             >
               <X className="w-4 h-4" />

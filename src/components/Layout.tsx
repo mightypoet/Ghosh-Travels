@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   CheckCircle2,
   ChevronDown,
@@ -22,7 +22,7 @@ export const GhoshLogo: React.FC<{ className?: string }> = ({ className = '' }) 
       <img
         src="/assets/aistudio/logo__1___1__773f483a.png"
         alt="Ghosh Travels"
-        className="h-[25px] md:h-7 w-auto object-contain"
+        className="h-[21px] sm:h-[25px] md:h-7 w-auto object-contain"
       />
     </span>
   );
@@ -69,6 +69,20 @@ export const QuickEnquiryModal: React.FC = () => {
       setIsSubmitting(false);
     }
   }, [enquiryModalOpen, enquiryModalPrefill]);
+
+  useEffect(() => {
+    if (!enquiryModalOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeEnquiryModal();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [enquiryModalOpen, closeEnquiryModal]);
 
   if (!enquiryModalOpen) return null;
 
@@ -122,12 +136,15 @@ export const QuickEnquiryModal: React.FC = () => {
 
   return (
     <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) closeEnquiryModal();
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="quick-enquiry-title"
     >
-      <div className="relative w-full max-w-xl rounded-xl bg-[#151515] border border-neutral-800 text-white p-6 md:p-8 shadow-2xl my-8">
+      <div className="relative w-full max-w-xl rounded-xl bg-[#151515] border border-neutral-800 text-white p-5 sm:p-6 md:p-8 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
         <button
           onClick={closeEnquiryModal}
           className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-white rounded-lg transition-colors"
@@ -365,12 +382,47 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { currentPage, navigate, siteSettings, services, buildWhatsAppUrl } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const servicesMenuRef = useRef<HTMLDivElement | null>(null);
 
   const handleNavClick = (page: PageId) => {
     navigate(page);
     setMobileMenuOpen(false);
     setServicesDropdownOpen(false);
   };
+
+  useEffect(() => {
+    if (!servicesDropdownOpen && !mobileMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setServicesDropdownOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      if (
+        servicesDropdownOpen &&
+        servicesMenuRef.current &&
+        !servicesMenuRef.current.contains(e.target as Node)
+      ) {
+        setServicesDropdownOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [servicesDropdownOpen, mobileMenuOpen]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#151515]">
@@ -420,7 +472,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* Main Sticky Header following 3-Zone Top Bar Contract */}
       <header className="sticky top-0 z-40 bg-[#151515] text-white border-b border-neutral-800 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 md:h-20 flex items-center justify-between gap-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 md:h-20 flex items-center justify-between gap-2 sm:gap-4 lg:gap-8">
           {/* Zone 1: Brand Title (Single Element Wordmark) */}
           <button
             onClick={() => handleNavClick('home')}
@@ -431,7 +483,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </button>
 
           {/* Zone 2: 5 Concise Single-Line Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-7 text-sm font-medium">
             <button
               onClick={() => handleNavClick('home')}
               className={`transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
@@ -454,22 +506,42 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               About Us
             </button>
 
-            {/* Car Rental Services Dropdown */}
+            {/* Car Rental Services Dropdown (Mouse Hover, Touch Toggle & Keyboard Accessible) */}
             <div
-              className="relative"
+              ref={servicesMenuRef}
+              className="relative flex items-center gap-0.5"
               onMouseEnter={() => setServicesDropdownOpen(true)}
               onMouseLeave={() => setServicesDropdownOpen(false)}
             >
               <button
                 onClick={() => handleNavClick('services')}
-                className={`inline-flex items-center gap-1.5 py-2 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`inline-flex items-center py-2 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   currentPage === 'services' || currentPage.startsWith('service-')
                     ? 'text-[#FFD21F] font-semibold'
                     : 'text-neutral-200 hover:text-[#FFD21F]'
                 }`}
               >
                 <span>Car Rental Services</span>
-                <ChevronDown className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setServicesDropdownOpen((prev) => !prev)}
+                aria-label="Toggle Car Rental Services menu"
+                aria-expanded={servicesDropdownOpen}
+                aria-haspopup="menu"
+                className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                  servicesDropdownOpen ||
+                  currentPage === 'services' ||
+                  currentPage.startsWith('service-')
+                    ? 'text-[#FFD21F]'
+                    : 'text-neutral-300 hover:text-[#FFD21F]'
+                }`}
+              >
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    servicesDropdownOpen ? 'rotate-180' : ''
+                  }`}
+                />
               </button>
 
               {servicesDropdownOpen && (
@@ -529,7 +601,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </nav>
 
           {/* Zone 3: 1 Primary Action */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <BookCallButton
               label="Book Your Cab"
               onClick={() => handleNavClick('booking')}
@@ -537,8 +609,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg text-neutral-200 hover:text-[#FFD21F] hover:bg-[#242424] transition-colors"
+              className="lg:hidden min-w-[44px] min-h-[44px] p-2 rounded-lg text-neutral-200 hover:text-[#FFD21F] hover:bg-[#242424] transition-colors flex items-center justify-center"
               aria-label="Toggle Menu"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -890,12 +963,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       </footer>
 
       {/* Floating WhatsApp Enquiry Button */}
-      <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2">
+      <div className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-40 flex items-center gap-2">
         <a
           href={buildWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="group inline-flex items-center gap-2.5 bg-[#25D366] text-[#151515] font-display font-bold text-xs px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-transform hover:-translate-y-0.5 whitespace-nowrap"
+          className="group inline-flex items-center justify-center gap-2.5 bg-[#25D366] text-[#151515] font-display font-bold text-xs min-h-[44px] min-w-[44px] px-3.5 sm:px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-transform hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
           aria-label="Chat with Ghosh Travels on WhatsApp"
         >
           <MessageCircle className="w-5 h-5 fill-current" />

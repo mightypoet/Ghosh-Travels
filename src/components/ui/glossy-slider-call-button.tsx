@@ -16,7 +16,7 @@ export default function BookCallButton({
       <style>{`
         .gt-book-btn {
           position: relative;
-          width: 130px;
+          width: 122px;
           height: 32px;
           padding: 0;
           background: #101010;
@@ -26,13 +26,19 @@ export default function BookCallButton({
           display: inline-flex;
           align-items: center;
           flex-shrink: 0;
+          touch-action: manipulation;
           box-shadow:
             inset 0 2px 4px rgba(0, 0, 0, 0.80),
             inset 0 1px 1px rgba(255, 255, 255, 0.15),
             0 6px 14px rgba(0, 0, 0, 0.25);
           overflow: hidden;
+          transition: transform 0.15s ease;
           -webkit-tap-highlight-color: transparent;
           font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        }
+
+        .gt-book-btn:active {
+          transform: scale(0.97);
         }
 
         .gt-book-btn:focus-visible {
@@ -45,7 +51,7 @@ export default function BookCallButton({
           left: 3px;
           top: 3px;
           bottom: 3px;
-          width: 34px;
+          width: 30px;
           background-color: #ffca00;
           border-radius: 999px;
           transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
@@ -59,50 +65,33 @@ export default function BookCallButton({
             0 2px 6px rgba(0, 0, 0, 0.30);
         }
 
-        .gt-book-btn:hover .slider,
-        .gt-book-btn:focus-visible .slider {
-          width: calc(100% - 6px);
-        }
-
         .gt-book-btn .icon-arrow {
           position: absolute;
-          width: 15px;
-          height: 15px;
+          width: 14px;
+          height: 14px;
           color: #111111;
           opacity: 1;
           transform: translateX(0);
           transition: opacity 0.40s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .gt-book-btn:hover .icon-arrow,
-        .gt-book-btn:focus-visible .icon-arrow {
-          opacity: 0;
-          transform: translateX(28px);
-        }
-
         .gt-book-btn .icon-phone {
           position: absolute;
-          width: 13px;
-          height: 13px;
+          width: 12px;
+          height: 12px;
           color: #111111;
           opacity: 0;
-          transform: translateX(-28px) scale(0.7);
+          transform: translateX(-26px) scale(0.7);
           transition: opacity 0.45s ease 0.10s, transform 0.60s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .gt-book-btn:hover .icon-phone,
-        .gt-book-btn:focus-visible .icon-phone {
-          opacity: 1;
-          transform: translateX(0) scale(1);
         }
 
         .gt-book-btn .text {
           position: absolute;
-          left: 41px;
-          right: 8px;
+          left: 36px;
+          right: 7px;
           text-align: center;
           color: #ffffff;
-          font-size: 10px;
+          font-size: 9.5px;
           font-weight: 600;
           letter-spacing: -0.2px;
           white-space: nowrap;
@@ -110,10 +99,70 @@ export default function BookCallButton({
           z-index: 1;
         }
 
-        .gt-book-btn:hover .text,
+        @media (hover: hover) and (pointer: fine) {
+          .gt-book-btn:hover .slider {
+            width: calc(100% - 6px);
+          }
+
+          .gt-book-btn:hover .icon-arrow {
+            opacity: 0;
+            transform: translateX(28px);
+          }
+
+          .gt-book-btn:hover .icon-phone {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+
+          .gt-book-btn:hover .text {
+            opacity: 0;
+            transform: translateX(-10px);
+          }
+        }
+
+        .gt-book-btn:focus-visible .slider {
+          width: calc(100% - 6px);
+        }
+
+        .gt-book-btn:focus-visible .icon-arrow {
+          opacity: 0;
+          transform: translateX(28px);
+        }
+
+        .gt-book-btn:focus-visible .icon-phone {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+        }
+
         .gt-book-btn:focus-visible .text {
           opacity: 0;
           transform: translateX(-10px);
+        }
+
+        @media (min-width: 390px) {
+          .gt-book-btn {
+            width: 130px;
+          }
+
+          .gt-book-btn .slider {
+            width: 34px;
+          }
+
+          .gt-book-btn .icon-arrow {
+            width: 15px;
+            height: 15px;
+          }
+
+          .gt-book-btn .icon-phone {
+            width: 13px;
+            height: 13px;
+          }
+
+          .gt-book-btn .text {
+            left: 41px;
+            right: 8px;
+            font-size: 10px;
+          }
         }
 
         @media (min-width: 640px) {
@@ -128,11 +177,6 @@ export default function BookCallButton({
             top: 3px;
             bottom: 3px;
             width: 44px;
-          }
-
-          .gt-book-btn:hover .slider,
-          .gt-book-btn:focus-visible .slider {
-            width: calc(100% - 6px);
           }
 
           .gt-book-btn .icon-arrow {

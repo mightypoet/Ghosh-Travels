@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,10 +10,12 @@ import {
   CheckCircle2,
   Clock,
   FileText,
+  Loader2,
   Mail,
   MapPin,
   MessageCircle,
   Phone,
+  Search,
   Shield,
   Upload,
   UserCheck,
@@ -22,7 +24,8 @@ import {
 import { ResilientImage } from '../components/ResilientImage';
 import { useApp } from '../context/AppContext';
 import { ASSET_IMAGES } from '../data/initialData';
-import { EnquiryRecord, JobApplication, PageId } from '../types';
+import { sanitizeMediaUrl } from '../lib/supabase';
+import { BlogPost, EnquiryRecord, JobApplication, PageId } from '../types';
 
 export const AboutPage: React.FC = () => {
   const {
@@ -876,11 +879,63 @@ export const CareerPage: React.FC = () => {
 };
 
 export const BlogPage: React.FC = () => {
-  const { blogs, activeBlogSlug, navigate, openEnquiryModal } = useApp();
+  const {
+    blogs,
+    blogsLoading,
+    blogsError,
+    fetchPublishedBlogs,
+    fetchBlogBySlug,
+    activeBlogSlug,
+    navigate,
+    openEnquiryModal,
+  } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [fetchedArticle, setFetchedArticle] = useState<BlogPost | null>(null);
+  const [articleLoading, setArticleLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    fetchPublishedBlogs();
+  }, [fetchPublishedBlogs]);
+
+  useEffect(() => {
+    let active = true;
+    if (!activeBlogSlug) {
+      setFetchedArticle(null);
+      setArticleLoading(false);
+      return;
+    }
+    const existing = blogs.find((b) => b.slug === activeBlogSlug && b.published);
+    if (existing) {
+      setFetchedArticle(existing);
+      return;
+    }
+    setArticleLoading(true);
+    fetchBlogBySlug(activeBlogSlug).then((post) => {
+      if (!active) return;
+      setFetchedArticle(post);
+      setArticleLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [activeBlogSlug, blogs, fetchBlogBySlug]);
 
   const publishedBlogs = blogs.filter((b) => b.published);
-  const activeArticle = publishedBlogs.find((b) => b.slug === activeBlogSlug);
+  const activeArticle = activeBlogSlug
+    ? publishedBlogs.find((b) => b.slug === activeBlogSlug) || fetchedArticle
+    : null;
+
+  if (activeBlogSlug && articleLoading && !activeArticle) {
+    return (
+      <div className="bg-white py-20">
+        <div className="max-w-3xl mx-auto px-6 flex items-center justify-center gap-2 text-sm text-neutral-600">
+          <Loader2 className="w-4 h-4 animate-spin text-[#E9AD18]" />
+          <span>Loading article...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (activeArticle) {
     return (
@@ -908,6 +963,12 @@ export const BlogPage: React.FC = () => {
             </span>
             <span>·</span>
             <span>{activeArticle.read_time || '4 min read'}</span>
+            {activeArticle.author && (
+              <>
+                <span>·</span>
+                <span>{activeArticle.author}</span>
+              </>
+            )}
           </div>
 
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-[#151515] leading-tight">
@@ -916,7 +977,7 @@ export const BlogPage: React.FC = () => {
 
           <div className="rounded-2xl overflow-hidden border border-neutral-200 aspect-16/9">
             <ResilientImage
-              src={activeArticle.cover_image}
+              src={sanitizeMediaUrl(activeArticle.cover_image, ASSET_IMAGES.luxurySedans)}
               alt={activeArticle.title}
               className="w-full h-full object-cover"
             />
@@ -924,7 +985,8 @@ export const BlogPage: React.FC = () => {
 
           <div className="space-y-4 text-sm sm:text-base text-neutral-700 leading-relaxed pt-2">
             {activeArticle.content
-              .split(/\n\n+/)
+              .split(/\n+/)
+              .map((p) => p.trim())
               .filter(Boolean)
               .map((para, idx) => (
                 <p key={idx}>{para}</p>
@@ -960,9 +1022,17 @@ export const BlogPage: React.FC = () => {
     'Outstation Guides',
   ];
 
-  const filtered = publishedBlogs.filter(
-    (b) => selectedCategory === 'All' || b.category === selectedCategory
-  );
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filtered = publishedBlogs.filter((b) => {
+    const matchesCat = selectedCategory === 'All' || b.category === selectedCategory;
+    if (!matchesCat) return false;
+    if (!normalizedQuery) return true;
+    return (
+      b.title.toLowerCase().includes(normalizedQuery) ||
+      b.excerpt.toLowerCase().includes(normalizedQuery) ||
+      b.content.toLowerCase().includes(normalizedQuery)
+    );
+  });
 
   return (
     <div className="bg-white">
@@ -982,70 +1052,105 @@ export const BlogPage: React.FC = () => {
       </section>
 
       <section className="py-14 max-w-7xl mx-auto px-6">
-        <div className="flex flex-wrap gap-2 mb-10">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-lg text-xs font-display font-bold transition-colors cursor-pointer ${
-                selectedCategory === cat
-                  ? 'bg-[#151515] text-[#FFD21F]'
-                  : 'bg-[#F4F4F4] text-neutral-700 hover:bg-neutral-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-lg text-xs font-display font-bold transition-colors cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-[#151515] text-[#FFD21F]'
+                    : 'bg-[#F4F4F4] text-neutral-700 hover:bg-neutral-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search articles..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg bg-[#F4F4F4] border border-neutral-200 text-xs text-[#151515] focus:outline-none focus:border-[#151515]"
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {filtered.map((post) => (
-            <article
-              key={post.id}
-              className="rounded-2xl border border-neutral-200 overflow-hidden bg-white hover:shadow-lg transition-shadow flex flex-col justify-between"
-            >
-              <div>
-                <div className="aspect-16/9 bg-neutral-100 overflow-hidden">
-                  <ResilientImage
-                    src={post.cover_image}
-                    alt={post.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-6 space-y-3">
-                  <div className="flex items-center gap-2 text-xs text-neutral-500">
-                    <span className="font-semibold text-[#E9AD18]">{post.category}</span>
-                    <span>·</span>
-                    <span>
-                      {post.created_at
-                        ? new Date(post.created_at).toLocaleDateString('en-IN', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: '2-digit',
-                          })
-                        : 'Recent'}
-                    </span>
-                    <span>·</span>
-                    <span>{post.read_time || '4 min read'}</span>
+        {blogsError && (
+          <div className="mb-8 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+            Unable to load blog posts: {blogsError}
+          </div>
+        )}
+
+        {blogsLoading ? (
+          <div className="py-16 flex items-center justify-center gap-2 text-xs text-neutral-600">
+            <Loader2 className="w-4 h-4 animate-spin text-[#E9AD18]" />
+            <span>Loading latest articles...</span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-14 text-center rounded-2xl border border-neutral-200 bg-[#F4F4F4]/60 px-6 space-y-2">
+            <p className="font-display font-bold text-sm text-[#151515]">
+              No published articles match your filter
+            </p>
+            <p className="text-xs text-neutral-500">
+              Try selecting a different category or clearing your search query.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {filtered.map((post) => (
+              <article
+                key={post.id}
+                className="rounded-2xl border border-neutral-200 overflow-hidden bg-white hover:shadow-lg transition-shadow flex flex-col justify-between"
+              >
+                <div>
+                  <div className="aspect-16/9 bg-neutral-100 overflow-hidden">
+                    <ResilientImage
+                      src={sanitizeMediaUrl(post.cover_image, ASSET_IMAGES.luxurySedans)}
+                      alt={post.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <h2 className="text-xl font-display font-extrabold text-[#151515]">
-                    {post.title}
-                  </h2>
-                  <p className="text-xs text-neutral-600 leading-relaxed">{post.excerpt}</p>
+                  <div className="p-6 space-y-3">
+                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                      <span className="font-semibold text-[#E9AD18]">{post.category}</span>
+                      <span>·</span>
+                      <span>
+                        {post.created_at
+                          ? new Date(post.created_at).toLocaleDateString('en-IN', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: '2-digit',
+                            })
+                          : 'Recent'}
+                      </span>
+                      <span>·</span>
+                      <span>{post.read_time || '4 min read'}</span>
+                    </div>
+                    <h2 className="text-xl font-display font-extrabold text-[#151515]">
+                      {post.title}
+                    </h2>
+                    <p className="text-xs text-neutral-600 leading-relaxed">{post.excerpt}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="px-6 pb-6">
-                <button
-                  onClick={() => navigate('blog', undefined, post.slug)}
-                  className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-[#151515] hover:text-[#E9AD18] cursor-pointer"
-                >
-                  <span>Read Full Article</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
+                <div className="px-6 pb-6">
+                  <button
+                    onClick={() => navigate('blog', undefined, post.slug)}
+                    className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-[#151515] hover:text-[#E9AD18] cursor-pointer"
+                  >
+                    <span>Read Full Article</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

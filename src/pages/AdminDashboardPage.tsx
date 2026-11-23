@@ -20,6 +20,7 @@ import {
   Plus,
   RefreshCw,
   Settings,
+  ShieldAlert,
   ShieldCheck,
   Trash2,
 } from 'lucide-react';
@@ -96,35 +97,54 @@ create table if not exists public.blogs (
 alter table public.enquiries enable row level security;
 alter table public.blogs enable row level security;
 
--- Public can submit enquiries; only authenticated admins can read/update/delete
+-- Public can submit enquiries; only authorized admin emails can read/update/delete
 create policy "Anyone can submit enquiries" on public.enquiries
   for insert to anon, authenticated with check (true);
 create policy "Admins can view enquiries" on public.enquiries
-  for select to authenticated using (true);
+  for select to authenticated using (
+    lower(auth.jwt() ->> 'email') in ('rohan00as@gmail.com', 'ghoshgroup3@gmail.com', 'tanmoyroy820@gmail.com')
+  );
 create policy "Admins can update enquiries" on public.enquiries
-  for update to authenticated using (true) with check (true);
+  for update to authenticated
+  using (lower(auth.jwt() ->> 'email') in ('rohan00as@gmail.com', 'ghoshgroup3@gmail.com', 'tanmoyroy820@gmail.com'))
+  with check (lower(auth.jwt() ->> 'email') in ('rohan00as@gmail.com', 'ghoshgroup3@gmail.com', 'tanmoyroy820@gmail.com'));
 create policy "Admins can delete enquiries" on public.enquiries
-  for delete to authenticated using (true);
+  for delete to authenticated using (
+    lower(auth.jwt() ->> 'email') in ('rohan00as@gmail.com', 'ghoshgroup3@gmail.com', 'tanmoyroy820@gmail.com')
+  );
 
--- Public can read published blogs; authenticated admins can manage all blogs
+-- Public can read published blogs; authorized admin emails can manage all blogs
 create policy "Public can read published blogs" on public.blogs
-  for select to anon, authenticated using (published = true or auth.role() = 'authenticated');
+  for select to anon, authenticated using (
+    published = true or lower(auth.jwt() ->> 'email') in ('rohan00as@gmail.com', 'ghoshgroup3@gmail.com', 'tanmoyroy820@gmail.com')
+  );
 create policy "Admins can insert blogs" on public.blogs
-  for insert to authenticated with check (true);
+  for insert to authenticated with check (
+    lower(auth.jwt() ->> 'email') in ('rohan00as@gmail.com', 'ghoshgroup3@gmail.com', 'tanmoyroy820@gmail.com')
+  );
 create policy "Admins can update blogs" on public.blogs
-  for update to authenticated using (true) with check (true);
+  for update to authenticated
+  using (lower(auth.jwt() ->> 'email') in ('rohan00as@gmail.com', 'ghoshgroup3@gmail.com', 'tanmoyroy820@gmail.com'))
+  with check (lower(auth.jwt() ->> 'email') in ('rohan00as@gmail.com', 'ghoshgroup3@gmail.com', 'tanmoyroy820@gmail.com'));
 create policy "Admins can delete blogs" on public.blogs
-  for delete to authenticated using (true);
+  for delete to authenticated using (
+    lower(auth.jwt() ->> 'email') in ('rohan00as@gmail.com', 'ghoshgroup3@gmail.com', 'tanmoyroy820@gmail.com')
+  );
 
 -- Enable Realtime on enquiries
 alter publication supabase_realtime add table public.enquiries;`;
+
+const ALLOWED_ADMIN_EMAILS = [
+  'rohan00as@gmail.com',
+  'ghoshgroup3@gmail.com',
+  'tanmoyroy820@gmail.com',
+];
 
 export const AdminDashboardPage: React.FC = () => {
   const {
     supabaseReady,
     adminUser,
     authLoading,
-    signInAdmin,
     signOutAdmin,
     enquiries,
     enquiriesLoading,
@@ -155,11 +175,14 @@ export const AdminDashboardPage: React.FC = () => {
     buildWhatsAppUrl,
   } = useApp();
 
-  const [adminEmail, setAdminEmail] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
   const [signingIn, setSigningIn] = useState(false);
   const [authError, setAuthError] = useState('');
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+
+  const normalizedAdminEmail = adminUser?.email?.trim().toLowerCase() ?? '';
+  const isAuthorizedAdmin = Boolean(
+    adminUser && ALLOWED_ADMIN_EMAILS.includes(normalizedAdminEmail)
+  );
 
   // Enquiry filter, notes & delete confirmation state
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -210,9 +233,9 @@ export const AdminDashboardPage: React.FC = () => {
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [sqlCopied, setSqlCopied] = useState(false);
 
-  // Fetch Enquiries & Blogs + Subscribe to Realtime Enquiries once Admin is signed in
+  // Fetch Enquiries & Blogs + Subscribe to Realtime Enquiries once authorized Admin is signed in
   useEffect(() => {
-    if (!adminUser) return;
+    if (!adminUser || !isAuthorizedAdmin) return;
     fetchEnquiries();
     fetchAllBlogs();
 
@@ -231,20 +254,26 @@ export const AdminDashboardPage: React.FC = () => {
     return () => {
       supabase?.removeChannel(channel);
     };
-  }, [adminUser, fetchEnquiries, fetchAllBlogs]);
+  }, [adminUser, isAuthorizedAdmin, fetchEnquiries, fetchAllBlogs]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGoogleSignIn = async () => {
     setAuthError('');
-    if (!adminEmail.trim() || !adminPassword) {
-      setAuthError('Please enter your administrator email and password.');
+    if (!supabase) {
+      setAuthError(
+        'Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.'
+      );
       return;
     }
     setSigningIn(true);
-    const { error } = await signInAdmin(adminEmail, adminPassword);
-    setSigningIn(false);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
     if (error) {
-      setAuthError(error);
+      setAuthError(error.message);
+      setSigningIn(false);
     }
   };
 
@@ -278,7 +307,7 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
 
           <p className="text-xs text-neutral-400 leading-relaxed">
-            Sign in with your authorized Supabase administrator account to manage live booking
+            Sign in with an authorized Ghosh Travels Google account to manage live booking
             enquiries, blog articles, vehicle fleet listings, and website settings.
           </p>
 
@@ -288,7 +317,7 @@ export const AdminDashboardPage: React.FC = () => {
               <span>
                 Add <code className="text-white">VITE_SUPABASE_URL</code> and{' '}
                 <code className="text-white">VITE_SUPABASE_ANON_KEY</code> in your environment
-                secrets, then create an admin user in Supabase Authentication.
+                secrets, and enable the Google provider in Supabase Authentication.
               </span>
             </div>
           )}
@@ -299,44 +328,72 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs text-neutral-300 mb-1">Administrator Email</label>
-              <input
-                type="email"
-                required
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="admin@ghoshtravels.com"
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white focus:outline-none focus:border-[#FFD21F]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-neutral-300 mb-1">Password</label>
-              <input
-                type="password"
-                required
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white focus:outline-none focus:border-[#FFD21F]"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={signingIn || !supabaseReady}
-              className="w-full py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] disabled:opacity-50 text-[#151515] font-display font-bold text-sm transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
-            >
-              {signingIn && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{signingIn ? 'SIGNING IN...' : 'ACCESS ADMIN DASHBOARD'}</span>
-            </button>
-          </form>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={signingIn || !supabaseReady}
+            className="w-full py-3.5 px-4 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] disabled:opacity-50 text-[#151515] font-display font-bold text-sm transition-colors cursor-pointer inline-flex items-center justify-center gap-2.5 shadow-md"
+          >
+            {signingIn ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M21.8 10.23H12.2v3.94h5.52c-.24 1.38-1.45 4.04-5.52 4.04-3.32 0-6.03-2.75-6.03-6.15s2.71-6.15 6.03-6.15c1.89 0 3.16.8 3.88 1.5l2.64-2.55C17.03 3.29 14.84 2.3 12.2 2.3 6.84 2.3 2.5 6.64 2.5 12s4.34 9.7 9.7 9.7c5.6 0 9.31-3.93 9.31-9.47 0-.64-.07-1.13-.16-2z"
+                />
+              </svg>
+            )}
+            <span>{signingIn ? 'REDIRECTING TO GOOGLE...' : 'Sign in with Google'}</span>
+          </button>
 
           <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-[11px] text-neutral-500">
             <span>Fleet Manager: {siteSettings.managementName}</span>
-            <span>Supabase Auth Gate</span>
+            <span>Supabase Google OAuth</span>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthorizedAdmin) {
+    return (
+      <div className="min-h-[80vh] bg-[#F4F4F4] flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-[#151515] text-white rounded-2xl p-8 border border-red-900/70 shadow-2xl space-y-5">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-red-950 border border-red-700 text-red-400 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-display font-bold uppercase tracking-wider text-red-400">
+                Ghosh Travels · Restricted Area
+              </p>
+              <h1 className="text-lg font-display font-extrabold text-white">
+                Access Denied – Unauthorized Email
+              </h1>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-red-950/40 border border-red-900/60 text-xs text-red-200 space-y-2 leading-relaxed">
+            <p>
+              You are currently signed in as{' '}
+              <strong className="text-white">{adminUser.email || 'Unknown Account'}</strong>, which
+              is not authorized to access the Ghosh Travels Administrator Dashboard.
+            </p>
+            <p className="text-neutral-400">
+              Please sign out and sign in again using an approved Ghosh Travels administrator Google
+              account.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={signOutAdmin}
+            className="w-full py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-sm transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
+          </button>
         </div>
       </div>
     );

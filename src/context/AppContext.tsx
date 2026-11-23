@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import {
   INITIAL_BLOGS,
@@ -324,6 +324,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [blogs, setBlogs] = useState<BlogPost[]>(() =>
     isSupabaseConfigured ? [] : loadFromStorage(STORAGE_KEYS.BLOGS, INITIAL_BLOGS)
   );
+  const blogsRef = useRef<BlogPost[]>(blogs);
+  blogsRef.current = blogs;
   const [blogsLoading, setBlogsLoading] = useState(false);
   const [blogsError, setBlogsError] = useState<string | null>(null);
 
@@ -588,7 +590,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const fetchPublishedBlogs = useCallback(async (): Promise<BlogPost[]> => {
     if (!supabase) {
-      return blogs.filter((b) => b.published);
+      return blogsRef.current.filter((b) => b.published);
     }
     setBlogsLoading(true);
     setBlogsError(null);
@@ -607,11 +609,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setBlogs(mapped);
     setBlogsLoading(false);
     return mapped;
-  }, [blogs]);
+  }, []);
 
   const fetchAllBlogs = useCallback(async (): Promise<BlogPost[]> => {
     if (!supabase) {
-      return blogs;
+      return blogsRef.current;
     }
     setBlogsLoading(true);
     setBlogsError(null);
@@ -629,27 +631,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setBlogs(mapped);
     setBlogsLoading(false);
     return mapped;
-  }, [blogs]);
+  }, []);
 
-  const fetchBlogBySlug = useCallback(
-    async (slug: string): Promise<BlogPost | null> => {
-      if (!supabase) {
-        return blogs.find((b) => b.slug === slug && b.published) || null;
-      }
-      const { data, error } = await supabase
-        .from('blogs')
-        .select('*')
-        .eq('slug', slug)
-        .eq('published', true)
-        .maybeSingle();
+  const fetchBlogBySlug = useCallback(async (slug: string): Promise<BlogPost | null> => {
+    if (!supabase) {
+      return blogsRef.current.find((b) => b.slug === slug && b.published) || null;
+    }
+    const { data, error } = await supabase
+      .from('blogs')
+      .select('*')
+      .eq('slug', slug)
+      .eq('published', true)
+      .maybeSingle();
 
-      if (error || !data) {
-        return null;
-      }
-      return mapSupabaseBlog(data as Record<string, unknown>);
-    },
-    [blogs]
-  );
+    if (error || !data) {
+      return null;
+    }
+    return mapSupabaseBlog(data as Record<string, unknown>);
+  }, []);
 
   const saveBlogPost = async (payload: BlogInputPayload): Promise<BlogPost> => {
     const cleanCover = sanitizeMediaUrl(

@@ -66,13 +66,24 @@ export const HomePage: React.FC = () => {
   const [qName, setQName] = useState('');
   const [qEmail, setQEmail] = useState('');
   const [qPhone, setQPhone] = useState('');
-  const [qService, setQService] = useState('Luxury Car Rental');
+  const [qService, setQService] = useState('');
   const [qDate, setQDate] = useState('');
   const [qPickup, setQPickup] = useState('');
   const [qMessage, setQMessage] = useState('');
   const [qError, setQError] = useState('');
   const [qSubmitting, setQSubmitting] = useState(false);
   const [qSuccessRecord, setQSuccessRecord] = useState<EnquiryRecord | null>(null);
+
+  const qPhoneDigits = qPhone.replace(/[\s\-+()]/g, '');
+  const hasQuickName = qName.trim().length > 0;
+  const isQuickEmailValidOrEmpty =
+    qEmail.trim().length === 0 || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(qEmail.trim());
+  const hasQuickContact =
+    hasQuickName && isQuickEmailValidOrEmpty && qPhoneDigits.length >= 10;
+  const hasQuickServiceAndDate =
+    hasQuickContact && qService.trim().length > 0 && qDate.trim().length > 0;
+  const hasQuickPickup = hasQuickServiceAndDate && qPickup.trim().length > 0;
+  const hasQuickMessage = hasQuickPickup && qMessage.trim().length > 0;
 
   const slides = siteSettings.heroSlides;
 
@@ -126,6 +137,7 @@ export const HomePage: React.FC = () => {
       setQName('');
       setQEmail('');
       setQPhone('');
+      setQService('');
       setQDate('');
       setQPickup('');
       setQMessage('');
@@ -1086,6 +1098,7 @@ export const HomePage: React.FC = () => {
             </div>
           ) : (
             <form onSubmit={handleQuickEnquirySubmit} className="space-y-4">
+              {/* Step 1: Your Name * */}
               <div>
                 <label className="block text-xs text-neutral-300 mb-1">Your Name *</label>
                 <input
@@ -1094,91 +1107,196 @@ export const HomePage: React.FC = () => {
                   value={qName}
                   onChange={(e) => setQName(e.target.value)}
                   placeholder="Enter your Name"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#FFD21F]"
+                  className={`w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                    !hasQuickName
+                      ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                      : 'bg-[#242424] border border-neutral-700'
+                  }`}
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-neutral-300 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={qEmail}
-                    onChange={(e) => setQEmail(e.target.value)}
-                    placeholder="Enter Your Email ID"
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#FFD21F]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-neutral-300 mb-1">Phone Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={qPhone}
-                    onChange={(e) => setQPhone(e.target.value)}
-                    placeholder="Enter Your Number"
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#FFD21F]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-neutral-300 mb-1">Rental Service</label>
-                  <select
-                    value={qService}
-                    onChange={(e) => setQService(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white focus:outline-none focus:border-[#FFD21F]"
+              {/* Step 2: Email & Phone Number * */}
+              <AnimatePresence initial={false}>
+                {hasQuickName && (
+                  <motion.div
+                    key="home-quick-contact-step"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    {services.map((s) => (
-                      <option key={s.id} value={s.title}>
-                        {s.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-neutral-300 mb-1">Travel Date *</label>
-                  <input
-                    type="date"
-                    required
-                    value={qDate}
-                    onChange={(e) => setQDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white focus:outline-none focus:border-[#FFD21F]"
-                  />
-                </div>
-              </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-neutral-300 mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={qEmail}
+                          onChange={(e) => setQEmail(e.target.value)}
+                          placeholder="Enter Your Email ID"
+                          className={`w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasQuickContact
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-neutral-300 mb-1">Phone Number *</label>
+                        <input
+                          type="tel"
+                          required
+                          value={qPhone}
+                          onChange={(e) => setQPhone(e.target.value)}
+                          placeholder="Enter Your Number"
+                          className={`w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasQuickContact
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                    {qEmail.trim().length > 0 && !isQuickEmailValidOrEmpty && (
+                      <p className="mt-1.5 text-[11px] text-neutral-400">
+                        Enter a valid email address or leave it blank to continue.
+                      </p>
+                    )}
+                    {qPhone.trim().length > 0 && qPhoneDigits.length < 10 && (
+                      <p className="mt-1.5 text-[11px] text-neutral-400">
+                        Enter a 10-digit mobile number to continue.
+                      </p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <div>
-                <label className="block text-xs text-neutral-300 mb-1">Pickup Location *</label>
-                <input
-                  type="text"
-                  required
-                  value={qPickup}
-                  onChange={(e) => setQPickup(e.target.value)}
-                  placeholder="e.g. Maniktala, Salt Lake, Airport, Howrah Station"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#FFD21F]"
-                />
-              </div>
+              {/* Step 3: Rental Service & Travel Date * */}
+              <AnimatePresence initial={false}>
+                {hasQuickContact && (
+                  <motion.div
+                    key="home-quick-service-date-step"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                  >
+                    <div>
+                      <label className="block text-xs text-neutral-300 mb-1">Rental Service</label>
+                      <select
+                        required
+                        value={qService}
+                        onChange={(e) => setQService(e.target.value)}
+                        className={`w-full px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                          qService === '' ? 'text-neutral-400' : 'text-white'
+                        } ${
+                          !hasQuickServiceAndDate
+                            ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                            : 'bg-[#242424] border border-neutral-700'
+                        }`}
+                      >
+                        <option value="" disabled>
+                          Select Rental Service
+                        </option>
+                        {services.map((s) => (
+                          <option key={s.id} value={s.title}>
+                            {s.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-neutral-300 mb-1">Travel Date *</label>
+                      <input
+                        type="date"
+                        required
+                        value={qDate}
+                        onChange={(e) => setQDate(e.target.value)}
+                        className={`w-full px-3.5 py-2.5 rounded-lg text-sm text-white transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                          !hasQuickServiceAndDate
+                            ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                            : 'bg-[#242424] border border-neutral-700'
+                        }`}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <div>
-                <label className="block text-xs text-neutral-300 mb-1">Message</label>
-                <textarea
-                  rows={3}
-                  value={qMessage}
-                  onChange={(e) => setQMessage(e.target.value)}
-                  placeholder="Share destination, number of passengers, or special requests..."
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#FFD21F]"
-                />
-              </div>
+              {/* Step 4: Pickup Location * */}
+              <AnimatePresence initial={false}>
+                {hasQuickServiceAndDate && (
+                  <motion.div
+                    key="home-quick-pickup-step"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <label className="block text-xs text-neutral-300 mb-1">Pickup Location *</label>
+                    <input
+                      type="text"
+                      required
+                      value={qPickup}
+                      onChange={(e) => setQPickup(e.target.value)}
+                      placeholder="e.g. Maniktala, Salt Lake, Airport, Howrah Station"
+                      className={`w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                        !hasQuickPickup
+                          ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                          : 'bg-[#242424] border border-neutral-700'
+                      }`}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <button
-                type="submit"
-                disabled={qSubmitting}
-                className="px-7 py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] disabled:opacity-60 text-[#151515] font-display font-bold text-sm transition-colors cursor-pointer whitespace-nowrap"
-              >
-                {qSubmitting ? 'SENDING ENQUIRY...' : 'SEND ENQUIRY'}
-              </button>
+              {/* Step 5: Message */}
+              <AnimatePresence initial={false}>
+                {hasQuickPickup && (
+                  <motion.div
+                    key="home-quick-message-step"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <label className="block text-xs text-neutral-300 mb-1">Message</label>
+                    <textarea
+                      rows={3}
+                      required
+                      value={qMessage}
+                      onChange={(e) => setQMessage(e.target.value)}
+                      placeholder="Share destination, number of passengers, or special requests..."
+                      className={`w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                        !hasQuickMessage
+                          ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                          : 'bg-[#242424] border border-neutral-700'
+                      }`}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Step 6: SEND ENQUIRY Button */}
+              <AnimatePresence initial={false}>
+                {hasQuickMessage && (
+                  <motion.div
+                    key="home-quick-submit-step"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <button
+                      type="submit"
+                      disabled={qSubmitting}
+                      className="px-7 py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] hover:-translate-y-0.5 hover:shadow-[0_8px_22px_-6px_rgba(255,210,31,0.5)] active:translate-y-0 disabled:opacity-60 disabled:pointer-events-none text-[#151515] font-display font-bold text-sm transition-all duration-200 cursor-pointer whitespace-nowrap"
+                    >
+                      {qSubmitting ? 'SENDING ENQUIRY...' : 'SEND ENQUIRY'}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </form>
           )}
         </div>

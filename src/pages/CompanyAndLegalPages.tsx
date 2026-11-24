@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -40,13 +41,22 @@ export const AboutPage: React.FC = () => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [service, setService] = useState('Luxury Car Rental');
+  const [service, setService] = useState('');
   const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<EnquiryRecord | null>(null);
+
+  const hasName = name.trim().length > 0;
+  const phoneDigits = phone.replace(/[\s\-+()]/g, '');
+  const hasValidPhone = hasName && phoneDigits.length >= 10;
+  const hasValidEmail = hasValidPhone && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+  const hasService = hasValidEmail && service.trim().length > 0;
+  const hasMessage = hasService && message.trim().length > 0;
 
   const handleAboutEnquiry = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || phone.replace(/[\s\-+]/g, '').length < 10) return;
+    if (!hasName || phoneDigits.length < 10 || submitting) return;
+    setSubmitting(true);
     try {
       const rec = await submitEnquiry({
         sourcePage: 'About Us Page',
@@ -54,7 +64,7 @@ export const AboutPage: React.FC = () => {
         phone: phone.trim(),
         email: email.trim() || 'Not Provided',
         journeyType: 'General Consultation',
-        selectedService: service,
+        selectedService: service || 'Luxury Car Rental',
         selectedVehicle: 'Fleet Consultation',
         pickupLocation: 'Kolkata',
         destination: 'Kolkata / Outstation',
@@ -64,6 +74,8 @@ export const AboutPage: React.FC = () => {
       setSubmitted(rec);
     } catch {
       // ignore or keep form editable
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -277,53 +289,164 @@ export const AboutPage: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleAboutEnquiry} className="space-y-3.5">
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your Name *"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#151515] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                />
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Phone Number (+91) *"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#151515] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email Address"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#151515] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                />
-                <select
-                  value={service}
-                  onChange={(e) => setService(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#151515] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                >
-                  {services.map((s) => (
-                    <option key={s.id} value={s.title}>
-                      {s.title}
-                    </option>
-                  ))}
-                </select>
-                <textarea
-                  rows={3}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Your Message / Travel Requirement"
-                  className="w-full px-3.5 py-2 rounded-lg bg-[#151515] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                />
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-xs cursor-pointer"
-                >
-                  SEND ENQUIRY
-                </button>
+                <div>
+                  <input
+                    type="text"
+                    required
+                    aria-label="Your Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your Name *"
+                    className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1a1a1a] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                      !hasName
+                        ? 'bg-[#1a1a1a] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                        : 'bg-[#151515] border border-neutral-700'
+                    }`}
+                  />
+                </div>
+
+                <AnimatePresence initial={false}>
+                  {hasName && (
+                    <motion.div
+                      key="about-phone-step"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <input
+                        type="tel"
+                        required
+                        aria-label="Phone Number (+91)"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="Phone Number (+91) *"
+                        className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1a1a1a] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                          !hasValidPhone
+                            ? 'bg-[#1a1a1a] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                            : 'bg-[#151515] border border-neutral-700'
+                        }`}
+                      />
+                      {phone.trim().length > 0 && !hasValidPhone && (
+                        <p className="mt-1.5 text-[11px] text-neutral-400">
+                          Enter a 10-digit mobile number to continue.
+                        </p>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence initial={false}>
+                  {hasValidPhone && (
+                    <motion.div
+                      key="about-email-step"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <input
+                        type="email"
+                        required
+                        aria-label="Email Address"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Email Address *"
+                        className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1a1a1a] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                          !hasValidEmail
+                            ? 'bg-[#1a1a1a] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                            : 'bg-[#151515] border border-neutral-700'
+                        }`}
+                      />
+                      {email.trim().length > 0 && !hasValidEmail && (
+                        <p className="mt-1.5 text-[11px] text-neutral-400">
+                          Enter a valid email address to continue.
+                        </p>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence initial={false}>
+                  {hasValidEmail && (
+                    <motion.div
+                      key="about-select-step"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <select
+                        required
+                        aria-label="Rental Service"
+                        value={service}
+                        onChange={(e) => setService(e.target.value)}
+                        className={`w-full px-3.5 py-2.5 rounded-lg text-xs transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1a1a1a] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                          service === '' ? 'text-neutral-400' : 'text-white'
+                        } ${
+                          !hasService
+                            ? 'bg-[#1a1a1a] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                            : 'bg-[#151515] border border-neutral-700'
+                        }`}
+                      >
+                        <option value="" disabled>
+                          Select Rental Service *
+                        </option>
+                        {services.map((s) => (
+                          <option key={s.id} value={s.title}>
+                            {s.title}
+                          </option>
+                        ))}
+                      </select>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence initial={false}>
+                  {hasService && (
+                    <motion.div
+                      key="about-textarea-step"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <textarea
+                        rows={3}
+                        required
+                        aria-label="Your Message or Travel Requirement"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Your Message / Travel Requirement *"
+                        className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1a1a1a] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                          !hasMessage
+                            ? 'bg-[#1a1a1a] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                            : 'bg-[#151515] border border-neutral-700'
+                        }`}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence initial={false}>
+                  {hasMessage && (
+                    <motion.div
+                      key="about-submit-step"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full py-3 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] hover:-translate-y-0.5 hover:shadow-[0_8px_22px_-6px_rgba(255,210,31,0.5)] active:translate-y-0 disabled:opacity-60 disabled:pointer-events-none text-[#151515] font-display font-bold text-xs transition-all duration-200 cursor-pointer"
+                      >
+                        {submitting ? 'SENDING ENQUIRY...' : 'SEND ENQUIRY'}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </form>
             )}
           </div>

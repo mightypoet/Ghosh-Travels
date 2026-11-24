@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -142,6 +143,15 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
   } = useApp();
 
   const service = services.find((s) => s.id === serviceId) || services[0];
+  const isLuxuryCarService = service.id === 'service-luxury-car';
+  const isPremiumCarService = service.id === 'service-premium-car';
+  const isLuxuryCoachService = service.id === 'service-luxury-coach';
+  const isMiniBusService = service.id === 'service-mini-bus';
+  const isCorporateService = service.id === 'service-corporate';
+  const usesPassengerCountStep = isLuxuryCoachService || isMiniBusService;
+  const isSequentialCarService =
+    isLuxuryCarService || isPremiumCarService || isLuxuryCoachService || isMiniBusService;
+  const isAnySequentialService = isSequentialCarService || isCorporateService;
   const relatedVehicles = vehicles.filter((v) => v.active && v.serviceId === service.id);
 
   // Tailored Form State covering all 6 Service Pages' specific fields
@@ -151,16 +161,26 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [preferredVehicle, setPreferredVehicle] = useState(
-    service.vehicleCategories[0] || 'Consultation Required'
+    isAnySequentialService ? '' : service.vehicleCategories[0] || 'Consultation Required'
   );
-  const [numberOfVehicles, setNumberOfVehicles] = useState('1');
+  const [numberOfVehicles, setNumberOfVehicles] = useState(isCorporateService ? '' : '1');
   const [travelDate, setTravelDate] = useState('');
-  const [pickupLocation, setPickupLocation] = useState('Kolkata');
+  const [pickupLocation, setPickupLocation] = useState(
+    isAnySequentialService ? '' : 'Kolkata'
+  );
   const [destination, setDestination] = useState('');
   const [passengers, setPassengers] = useState('');
   const [acPreference, setAcPreference] = useState('AC');
-  const [journeyType, setJourneyType] = useState('Local / Outstation');
-  const [rentalDuration, setRentalDuration] = useState('10 Hours / 100 KM');
+  const [journeyType, setJourneyType] = useState(
+    isSequentialCarService
+      ? ''
+      : isCorporateService
+      ? 'Corporate / Event Charter'
+      : 'Local / Outstation'
+  );
+  const [rentalDuration, setRentalDuration] = useState(
+    isAnySequentialService ? '' : '10 Hours / 100 KM'
+  );
   const [decorationRequirements, setDecorationRequirements] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -168,11 +188,72 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
   const [submittedRecord, setSubmittedRecord] = useState<EnquiryRecord | null>(null);
 
   React.useEffect(() => {
-    setPreferredVehicle(service.vehicleCategories[0] || 'Consultation Required');
+    const isSeqCar =
+      service.id === 'service-luxury-car' ||
+      service.id === 'service-premium-car' ||
+      service.id === 'service-luxury-coach' ||
+      service.id === 'service-mini-bus';
+    const isCorp = service.id === 'service-corporate';
+    const isSeqAny = isSeqCar || isCorp;
+    setPreferredVehicle(
+      isSeqAny ? '' : service.vehicleCategories[0] || 'Consultation Required'
+    );
+    setPickupLocation(isSeqAny ? '' : 'Kolkata');
+    setJourneyType(
+      isSeqCar ? '' : isCorp ? 'Corporate / Event Charter' : 'Local / Outstation'
+    );
+    setRentalDuration(isSeqAny ? '' : '10 Hours / 100 KM');
+    setNumberOfVehicles(isCorp ? '' : '1');
+    setCompanyName('');
+    setDesignation('');
+    setPassengers('');
     setSubmittedRecord(null);
     setError('');
     setIsSubmitting(false);
   }, [service.id, service.vehicleCategories]);
+
+  // Progressive step tracking for Luxury Cars, Premium Cars, Luxury Coach & Mini Bus
+  const luxuryPhoneDigits = phone.replace(/[\s\-+()]/g, '');
+  const hasLuxuryNameAndPhone = name.trim().length > 0 && luxuryPhoneDigits.length >= 10;
+  const isLuxuryEmailValidOrEmpty =
+    email.trim().length === 0 || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+  const hasLuxuryEmailAndDate =
+    hasLuxuryNameAndPhone && isLuxuryEmailValidOrEmpty && travelDate.trim().length > 0;
+  const hasLuxuryCarAndDuration =
+    hasLuxuryEmailAndDate &&
+    preferredVehicle.trim().length > 0 &&
+    (usesPassengerCountStep
+      ? passengers.trim().length > 0 && Number(passengers) > 0
+      : rentalDuration.trim().length > 0);
+  const hasLuxuryRoute =
+    hasLuxuryCarAndDuration &&
+    pickupLocation.trim().length > 0 &&
+    destination.trim().length > 0;
+  const hasLuxuryJourneyType = hasLuxuryRoute && journeyType.trim().length > 0;
+  const hasLuxuryMessage = hasLuxuryJourneyType && message.trim().length > 0;
+
+  // Progressive step tracking for REQUEST CORPORATE QUOTATION
+  const hasCorporateCompanyAndDesignation =
+    companyName.trim().length > 0 && designation.trim().length > 0;
+  const hasCorporateContactAndPhone =
+    hasCorporateCompanyAndDesignation &&
+    name.trim().length > 0 &&
+    luxuryPhoneDigits.length >= 10;
+  const hasCorporateEmailAndDate =
+    hasCorporateContactAndPhone &&
+    isLuxuryEmailValidOrEmpty &&
+    travelDate.trim().length > 0;
+  const hasCorporateVehicles =
+    hasCorporateEmailAndDate &&
+    preferredVehicle.trim().length > 0 &&
+    numberOfVehicles.trim().length > 0 &&
+    Number(numberOfVehicles) > 0;
+  const hasCorporateLocationAndDuration =
+    hasCorporateVehicles &&
+    pickupLocation.trim().length > 0 &&
+    rentalDuration.trim().length > 0;
+  const hasCorporateRequirements =
+    hasCorporateLocationAndDuration && message.trim().length > 0;
 
   const handleServiceEnquiry = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -366,40 +447,58 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {relatedVehicles.map((v) => (
-                    <div
-                      key={v.id}
-                      className="rounded-xl border border-neutral-200 p-4 flex flex-col justify-between bg-white hover:border-[#FFD21F] transition-colors"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between text-xs text-neutral-500 mb-1">
-                          <span>{v.category}</span>
-                          <span>·</span>
-                          <span>{v.seatingCapacity}</span>
+                  {relatedVehicles.map((v) => {
+                    const isFortuner =
+                      v.id === 'veh-toyota-fortuner' || v.name === 'Toyota Fortuner';
+                    return (
+                      <div
+                        key={v.id}
+                        className="rounded-xl border border-neutral-200 p-4 flex flex-col justify-between bg-white hover:border-[#FFD21F] transition-colors relative overflow-hidden"
+                      >
+                        {isFortuner && (
+                          <>
+                            <img
+                              src="/assets/aistudio/image_00ff5c77.png"
+                              alt=""
+                              aria-hidden="true"
+                              className="absolute inset-0 w-full h-full object-cover object-center opacity-45 pointer-events-none"
+                            />
+                            <div
+                              aria-hidden="true"
+                              className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/75 to-white/35 pointer-events-none"
+                            />
+                          </>
+                        )}
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between text-xs text-neutral-600 mb-1">
+                            <span>{v.category}</span>
+                            <span>·</span>
+                            <span>{v.seatingCapacity}</span>
+                          </div>
+                          <h3 className="font-display font-bold text-base text-[#151515]">
+                            {v.name}
+                          </h3>
+                          <p className="text-xs text-neutral-700 mt-1 leading-relaxed">
+                            {v.shortDescription}
+                          </p>
                         </div>
-                        <h3 className="font-display font-bold text-base text-[#151515]">
-                          {v.name}
-                        </h3>
-                        <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
-                          {v.shortDescription}
-                        </p>
+                        <div className="relative z-10 mt-4 pt-3 border-t border-neutral-200/70 flex items-center justify-between">
+                          <span className="text-xs text-neutral-600">{v.acInfo}</span>
+                          <button
+                            onClick={() => {
+                              setPreferredVehicle(v.name);
+                              document
+                                .getElementById('service-enquiry-form')
+                                ?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-[#FFD21F] text-[#151515] font-display font-bold text-xs cursor-pointer"
+                          >
+                            Select Vehicle
+                          </button>
+                        </div>
                       </div>
-                      <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between">
-                        <span className="text-xs text-neutral-500">{v.acInfo}</span>
-                        <button
-                          onClick={() => {
-                            setPreferredVehicle(v.name);
-                            document
-                              .getElementById('service-enquiry-form')
-                              ?.scrollIntoView({ behavior: 'smooth' });
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-[#FFD21F] text-[#151515] font-display font-bold text-xs cursor-pointer"
-                        >
-                          Select Vehicle
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -459,6 +558,624 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                     </button>
                   </div>
                 </div>
+              ) : isSequentialCarService ? (
+                <form onSubmit={handleServiceEnquiry} className="space-y-4">
+                  {/* Step 1: Name* & Phone* */}
+                  <div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block text-xs text-neutral-300 mb-1">Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Full Name"
+                          className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasLuxuryNameAndPhone
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-neutral-300 mb-1">Phone *</label>
+                        <input
+                          type="tel"
+                          required
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+91 98749 55056"
+                          className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasLuxuryNameAndPhone
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                    {phone.trim().length > 0 && luxuryPhoneDigits.length < 10 && (
+                      <p className="mt-1.5 text-[11px] text-neutral-400">
+                        Enter a 10-digit mobile number to continue.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Step 2: Email & Travel Date* */}
+                  <AnimatePresence initial={false}>
+                    {hasLuxuryNameAndPhone && (
+                      <motion.div
+                        key="luxury-email-date-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-xs text-neutral-300 mb-1">Email</label>
+                            <input
+                              type="email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="email@example.com"
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasLuxuryEmailAndDate
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-neutral-300 mb-1">
+                              Travel Date *
+                            </label>
+                            <input
+                              type="date"
+                              required
+                              value={travelDate}
+                              onChange={(e) => setTravelDate(e.target.value)}
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasLuxuryEmailAndDate
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                        {email.trim().length > 0 && !isLuxuryEmailValidOrEmpty && (
+                          <p className="mt-1.5 text-[11px] text-neutral-400">
+                            Enter a valid email address or leave it blank to continue.
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 3: Preferred Luxury Car & Rental Duration */}
+                  <AnimatePresence initial={false}>
+                    {hasLuxuryEmailAndDate && (
+                      <motion.div
+                        key="luxury-car-duration-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3.5"
+                      >
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            Preferred Luxury Car
+                          </label>
+                          <select
+                            required
+                            value={preferredVehicle}
+                            onChange={(e) => setPreferredVehicle(e.target.value)}
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              preferredVehicle === '' ? 'text-neutral-400' : 'text-white'
+                            } ${
+                              !hasLuxuryCarAndDuration
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          >
+                            <option value="" disabled>
+                              Select Luxury Car *
+                            </option>
+                            {preferredVehicle &&
+                              !service.vehicleCategories.includes(preferredVehicle) && (
+                                <option value={preferredVehicle}>{preferredVehicle}</option>
+                              )}
+                            {service.vehicleCategories.map((vc) => (
+                              <option key={vc} value={vc}>
+                                {vc}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            {usesPassengerCountStep ? 'Number of Passengers' : 'Rental Duration'}
+                          </label>
+                          {usesPassengerCountStep ? (
+                            <input
+                              type="number"
+                              min="1"
+                              required
+                              value={passengers}
+                              onChange={(e) => setPassengers(e.target.value)}
+                              placeholder={isMiniBusService ? 'e.g. 16' : 'e.g. 32'}
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasLuxuryCarAndDuration
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              required
+                              value={rentalDuration}
+                              onChange={(e) => setRentalDuration(e.target.value)}
+                              placeholder="e.g. 10 Hrs / 100 Km or Full Day"
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasLuxuryCarAndDuration
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 4: Pickup Location* & Destination* */}
+                  <AnimatePresence initial={false}>
+                    {hasLuxuryCarAndDuration && (
+                      <motion.div
+                        key="luxury-route-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3.5"
+                      >
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            Pickup Location *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={pickupLocation}
+                            onChange={(e) => setPickupLocation(e.target.value)}
+                            placeholder="Kolkata Address"
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              !hasLuxuryRoute
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            Destination *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={destination}
+                            onChange={(e) => setDestination(e.target.value)}
+                            placeholder="Destination City / Area"
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              !hasLuxuryRoute
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 5: Journey Type */}
+                  <AnimatePresence initial={false}>
+                    {hasLuxuryRoute && (
+                      <motion.div
+                        key="luxury-journey-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <label className="block text-xs text-neutral-300 mb-1">Journey Type</label>
+                        <select
+                          required
+                          value={journeyType}
+                          onChange={(e) => setJourneyType(e.target.value)}
+                          className={`w-full px-3.5 py-2.5 rounded-lg text-xs transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            journeyType === '' ? 'text-neutral-400' : 'text-white'
+                          } ${
+                            !hasLuxuryJourneyType
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        >
+                          <option value="" disabled>
+                            Select Journey Type *
+                          </option>
+                          <option value="Local 10 Hrs / 100 KM">Local 10 Hrs / 100 KM</option>
+                          <option value="Outstation Journey">Outstation Journey</option>
+                          <option value="Airport / Railway Transfer">Airport / Railway Transfer</option>
+                          <option value="Corporate / Event Charter">Corporate / Event Charter</option>
+                        </select>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 6: Message */}
+                  <AnimatePresence initial={false}>
+                    {hasLuxuryJourneyType && (
+                      <motion.div
+                        key="luxury-message-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <label className="block text-xs text-neutral-300 mb-1">Message</label>
+                        <textarea
+                          rows={3}
+                          required
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          placeholder="Share itinerary timings, multi-day stops, or special requests..."
+                          className={`w-full px-3.5 py-2 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasLuxuryMessage
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 7: Submit Button */}
+                  <AnimatePresence initial={false}>
+                    {hasLuxuryMessage && (
+                      <motion.div
+                        key="luxury-submit-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="w-full py-3.5 px-6 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] hover:-translate-y-0.5 hover:shadow-[0_8px_22px_-6px_rgba(255,210,31,0.5)] active:translate-y-0 disabled:opacity-60 disabled:pointer-events-none text-[#151515] font-display font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap"
+                        >
+                          {isSubmitting
+                            ? 'SUBMITTING ENQUIRY...'
+                            : isMiniBusService
+                            ? 'BOOK A MINI BUS'
+                            : isLuxuryCoachService
+                            ? 'ENQUIRE FOR LUXURY COACH'
+                            : isPremiumCarService
+                            ? 'BOOK A PREMIUM CAR'
+                            : 'SEND ENQUIRY'}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </form>
+              ) : isCorporateService ? (
+                <form onSubmit={handleServiceEnquiry} className="space-y-4">
+                  {/* Step 1: Company Name * & Designation */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-xs text-neutral-300 mb-1">
+                        Company Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder="Organisation Name"
+                        className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                          !hasCorporateCompanyAndDesignation
+                            ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                            : 'bg-[#242424] border border-neutral-700'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-neutral-300 mb-1">Designation</label>
+                      <input
+                        type="text"
+                        required
+                        value={designation}
+                        onChange={(e) => setDesignation(e.target.value)}
+                        placeholder="e.g. Admin Head / Manager"
+                        className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                          !hasCorporateCompanyAndDesignation
+                            ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                            : 'bg-[#242424] border border-neutral-700'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Step 2: Contact Person * & Phone * */}
+                  <AnimatePresence initial={false}>
+                    {hasCorporateCompanyAndDesignation && (
+                      <motion.div
+                        key="corporate-contact-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-xs text-neutral-300 mb-1">
+                              Contact Person *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={name}
+                              onChange={(e) => setName(e.target.value)}
+                              placeholder="Full Name"
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasCorporateContactAndPhone
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-neutral-300 mb-1">Phone *</label>
+                            <input
+                              type="tel"
+                              required
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              placeholder="+91 98749 55056"
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasCorporateContactAndPhone
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                        {phone.trim().length > 0 && luxuryPhoneDigits.length < 10 && (
+                          <p className="mt-1.5 text-[11px] text-neutral-400">
+                            Enter a 10-digit mobile number to continue.
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 3: Email & Travel Date * */}
+                  <AnimatePresence initial={false}>
+                    {hasCorporateContactAndPhone && (
+                      <motion.div
+                        key="corporate-email-date-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-xs text-neutral-300 mb-1">Email</label>
+                            <input
+                              type="email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="email@example.com"
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasCorporateEmailAndDate
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-neutral-300 mb-1">
+                              Travel Date *
+                            </label>
+                            <input
+                              type="date"
+                              required
+                              value={travelDate}
+                              onChange={(e) => setTravelDate(e.target.value)}
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasCorporateEmailAndDate
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                        {email.trim().length > 0 && !isLuxuryEmailValidOrEmpty && (
+                          <p className="mt-1.5 text-[11px] text-neutral-400">
+                            Enter a valid email address or leave it blank to continue.
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 4: Required Vehicles & Number of Vehicles */}
+                  <AnimatePresence initial={false}>
+                    {hasCorporateEmailAndDate && (
+                      <motion.div
+                        key="corporate-vehicles-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3.5"
+                      >
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            Required Vehicles
+                          </label>
+                          <select
+                            required
+                            value={preferredVehicle}
+                            onChange={(e) => setPreferredVehicle(e.target.value)}
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              preferredVehicle === '' ? 'text-neutral-400' : 'text-white'
+                            } ${
+                              !hasCorporateVehicles
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          >
+                            <option value="" disabled>
+                              Select Required Vehicles *
+                            </option>
+                            {preferredVehicle &&
+                              !service.vehicleCategories.includes(preferredVehicle) && (
+                                <option value={preferredVehicle}>{preferredVehicle}</option>
+                              )}
+                            {service.vehicleCategories.map((vc) => (
+                              <option key={vc} value={vc}>
+                                {vc}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            Number of Vehicles
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            required
+                            value={numberOfVehicles}
+                            onChange={(e) => setNumberOfVehicles(e.target.value)}
+                            placeholder="e.g. 2"
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              !hasCorporateVehicles
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 5: Pickup / Service Location * & Service Duration */}
+                  <AnimatePresence initial={false}>
+                    {hasCorporateVehicles && (
+                      <motion.div
+                        key="corporate-location-duration-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3.5"
+                      >
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            Pickup / Service Location *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={pickupLocation}
+                            onChange={(e) => setPickupLocation(e.target.value)}
+                            placeholder="Kolkata Address"
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              !hasCorporateLocationAndDuration
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            Service Duration
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={rentalDuration}
+                            onChange={(e) => setRentalDuration(e.target.value)}
+                            placeholder="Daily / Monthly / Event Contract"
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              !hasCorporateLocationAndDuration
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 6: Transportation Requirements */}
+                  <AnimatePresence initial={false}>
+                    {hasCorporateLocationAndDuration && (
+                      <motion.div
+                        key="corporate-requirements-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <label className="block text-xs text-neutral-300 mb-1">
+                          Transportation Requirements
+                        </label>
+                        <textarea
+                          rows={3}
+                          required
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          placeholder="Share itinerary timings, multi-day stops, or special requests..."
+                          className={`w-full px-3.5 py-2 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasCorporateRequirements
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 7: REQUEST CORPORATE QUOTATION Button */}
+                  <AnimatePresence initial={false}>
+                    {hasCorporateRequirements && (
+                      <motion.div
+                        key="corporate-submit-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="w-full py-3.5 px-6 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] hover:-translate-y-0.5 hover:shadow-[0_8px_22px_-6px_rgba(255,210,31,0.5)] active:translate-y-0 disabled:opacity-60 disabled:pointer-events-none text-[#151515] font-display font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap"
+                        >
+                          {isSubmitting ? 'SUBMITTING ENQUIRY...' : 'REQUEST CORPORATE QUOTATION'}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </form>
               ) : (
                 <form onSubmit={handleServiceEnquiry} className="space-y-4">
                   {/* Corporate Car Booking specific fields */}
@@ -550,8 +1267,6 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                       <label className="block text-xs text-neutral-300 mb-1">
                         {service.id === 'service-corporate'
                           ? 'Required Vehicles'
-                          : service.id === 'service-luxury-car'
-                          ? 'Preferred Luxury Car'
                           : 'Preferred Vehicle'}
                       </label>
                       <select
@@ -583,13 +1298,11 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                     ) : (
                       <div>
                         <label className="block text-xs text-neutral-300 mb-1">
-                          {service.id === 'service-luxury-car' ||
-                          service.id === 'service-wedding-car'
+                          {service.id === 'service-wedding-car'
                             ? 'Rental Duration'
                             : 'Number of Passengers'}
                         </label>
-                        {service.id === 'service-luxury-car' ||
-                        service.id === 'service-wedding-car' ? (
+                        {service.id === 'service-wedding-car' ? (
                           <input
                             type="text"
                             value={rentalDuration}
@@ -695,7 +1408,6 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                   )}
 
                   {(service.id === 'service-luxury-coach' ||
-                    service.id === 'service-luxury-car' ||
                     service.id === 'service-premium-car') && (
                     <div>
                       <label className="block text-xs text-neutral-300 mb-1">

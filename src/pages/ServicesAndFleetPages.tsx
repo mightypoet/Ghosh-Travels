@@ -148,10 +148,12 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
   const isLuxuryCoachService = service.id === 'service-luxury-coach';
   const isMiniBusService = service.id === 'service-mini-bus';
   const isCorporateService = service.id === 'service-corporate';
+  const isWeddingCarService = service.id === 'service-wedding-car';
   const usesPassengerCountStep = isLuxuryCoachService || isMiniBusService;
   const isSequentialCarService =
     isLuxuryCarService || isPremiumCarService || isLuxuryCoachService || isMiniBusService;
-  const isAnySequentialService = isSequentialCarService || isCorporateService;
+  const isAnySequentialService =
+    isSequentialCarService || isCorporateService || isWeddingCarService;
   const relatedVehicles = vehicles.filter((v) => v.active && v.serviceId === service.id);
 
   // Tailored Form State covering all 6 Service Pages' specific fields
@@ -161,7 +163,9 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [preferredVehicle, setPreferredVehicle] = useState(
-    isAnySequentialService ? '' : service.vehicleCategories[0] || 'Consultation Required'
+    isSequentialCarService || isCorporateService
+      ? ''
+      : service.vehicleCategories[0] || 'Consultation Required'
   );
   const [numberOfVehicles, setNumberOfVehicles] = useState(isCorporateService ? '' : '1');
   const [travelDate, setTravelDate] = useState('');
@@ -176,10 +180,12 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
       ? ''
       : isCorporateService
       ? 'Corporate / Event Charter'
+      : isWeddingCarService
+      ? 'Wedding / Event'
       : 'Local / Outstation'
   );
   const [rentalDuration, setRentalDuration] = useState(
-    isAnySequentialService ? '' : '10 Hours / 100 KM'
+    isSequentialCarService || isCorporateService ? '' : '10 Hours / 100 KM'
   );
   const [decorationRequirements, setDecorationRequirements] = useState('');
   const [message, setMessage] = useState('');
@@ -194,18 +200,27 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
       service.id === 'service-luxury-coach' ||
       service.id === 'service-mini-bus';
     const isCorp = service.id === 'service-corporate';
-    const isSeqAny = isSeqCar || isCorp;
+    const isWed = service.id === 'service-wedding-car';
+    const isSeqAny = isSeqCar || isCorp || isWed;
     setPreferredVehicle(
-      isSeqAny ? '' : service.vehicleCategories[0] || 'Consultation Required'
+      isSeqCar || isCorp ? '' : service.vehicleCategories[0] || 'Consultation Required'
     );
     setPickupLocation(isSeqAny ? '' : 'Kolkata');
     setJourneyType(
-      isSeqCar ? '' : isCorp ? 'Corporate / Event Charter' : 'Local / Outstation'
+      isSeqCar
+        ? ''
+        : isCorp
+        ? 'Corporate / Event Charter'
+        : isWed
+        ? 'Wedding / Event'
+        : 'Local / Outstation'
     );
-    setRentalDuration(isSeqAny ? '' : '10 Hours / 100 KM');
+    setRentalDuration(isSeqCar || isCorp ? '' : '10 Hours / 100 KM');
     setNumberOfVehicles(isCorp ? '' : '1');
     setCompanyName('');
     setDesignation('');
+    setDestination('');
+    setDecorationRequirements('');
     setPassengers('');
     setSubmittedRecord(null);
     setError('');
@@ -254,6 +269,17 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
     rentalDuration.trim().length > 0;
   const hasCorporateRequirements =
     hasCorporateLocationAndDuration && message.trim().length > 0;
+
+  // Progressive step tracking for PLAN YOUR WEDDING RIDE
+  const hasWeddingNameAndPhone = name.trim().length > 0 && luxuryPhoneDigits.length >= 10;
+  const hasWeddingEmailAndDate =
+    hasWeddingNameAndPhone && isLuxuryEmailValidOrEmpty && travelDate.trim().length > 0;
+  const hasWeddingRoute =
+    hasWeddingEmailAndDate &&
+    pickupLocation.trim().length > 0 &&
+    destination.trim().length > 0;
+  const hasWeddingDecoration = hasWeddingRoute && decorationRequirements.trim().length > 0;
+  const hasWeddingAdditional = hasWeddingDecoration && message.trim().length > 0;
 
   const handleServiceEnquiry = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1171,6 +1197,228 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                           className="w-full py-3.5 px-6 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] hover:-translate-y-0.5 hover:shadow-[0_8px_22px_-6px_rgba(255,210,31,0.5)] active:translate-y-0 disabled:opacity-60 disabled:pointer-events-none text-[#151515] font-display font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap"
                         >
                           {isSubmitting ? 'SUBMITTING ENQUIRY...' : 'REQUEST CORPORATE QUOTATION'}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </form>
+              ) : isWeddingCarService ? (
+                <form onSubmit={handleServiceEnquiry} className="space-y-4">
+                  {/* Step 1: Name * & Phone * */}
+                  <div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block text-xs text-neutral-300 mb-1">Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Full Name"
+                          className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasWeddingNameAndPhone
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-neutral-300 mb-1">Phone *</label>
+                        <input
+                          type="tel"
+                          required
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+91 98749 55056"
+                          className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasWeddingNameAndPhone
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                    {phone.trim().length > 0 && luxuryPhoneDigits.length < 10 && (
+                      <p className="mt-1.5 text-[11px] text-neutral-400">
+                        Enter a 10-digit mobile number to continue.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Step 2: Email & Wedding Date * */}
+                  <AnimatePresence initial={false}>
+                    {hasWeddingNameAndPhone && (
+                      <motion.div
+                        key="wedding-email-date-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-xs text-neutral-300 mb-1">Email</label>
+                            <input
+                              type="email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="email@example.com"
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasWeddingEmailAndDate
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-neutral-300 mb-1">
+                              Wedding Date *
+                            </label>
+                            <input
+                              type="date"
+                              required
+                              value={travelDate}
+                              onChange={(e) => setTravelDate(e.target.value)}
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasWeddingEmailAndDate
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                        {email.trim().length > 0 && !isLuxuryEmailValidOrEmpty && (
+                          <p className="mt-1.5 text-[11px] text-neutral-400">
+                            Enter a valid email address or leave it blank to continue.
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 3: Pickup Location * & Wedding Venue * */}
+                  <AnimatePresence initial={false}>
+                    {hasWeddingEmailAndDate && (
+                      <motion.div
+                        key="wedding-route-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3.5"
+                      >
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            Pickup Location *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={pickupLocation}
+                            onChange={(e) => setPickupLocation(e.target.value)}
+                            placeholder="Kolkata Address"
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              !hasWeddingRoute
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            Wedding Venue *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={destination}
+                            onChange={(e) => setDestination(e.target.value)}
+                            placeholder="Marriage Hall / Hotel Venue"
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              !hasWeddingRoute
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 4: Decoration Requirements */}
+                  <AnimatePresence initial={false}>
+                    {hasWeddingRoute && (
+                      <motion.div
+                        key="wedding-decoration-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <label className="block text-xs text-neutral-300 mb-1">
+                          Decoration Requirements
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={decorationRequirements}
+                          onChange={(e) => setDecorationRequirements(e.target.value)}
+                          placeholder="e.g. Fresh white & gold floral hood arrangement"
+                          className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasWeddingDecoration
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 5: Additional Requirements */}
+                  <AnimatePresence initial={false}>
+                    {hasWeddingDecoration && (
+                      <motion.div
+                        key="wedding-additional-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <label className="block text-xs text-neutral-300 mb-1">
+                          Additional Requirements
+                        </label>
+                        <textarea
+                          rows={3}
+                          required
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          placeholder="Share itinerary timings, multi-day stops, or special requests..."
+                          className={`w-full px-3.5 py-2 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasWeddingAdditional
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 6: PLAN YOUR WEDDING RIDE Button */}
+                  <AnimatePresence initial={false}>
+                    {hasWeddingAdditional && (
+                      <motion.div
+                        key="wedding-submit-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="w-full py-3.5 px-6 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] hover:-translate-y-0.5 hover:shadow-[0_8px_22px_-6px_rgba(255,210,31,0.5)] active:translate-y-0 disabled:opacity-60 disabled:pointer-events-none text-[#151515] font-display font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap"
+                        >
+                          {isSubmitting ? 'SUBMITTING ENQUIRY...' : 'PLAN YOUR WEDDING RIDE'}
                         </button>
                       </motion.div>
                     )}

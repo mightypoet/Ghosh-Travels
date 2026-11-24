@@ -1857,7 +1857,48 @@ export const FleetPage: React.FC = () => {
                 <div>
                   <div className="aspect-16/10 bg-neutral-100 relative overflow-hidden">
                     <ResilientImage
-                      src={vehicle.image}
+                      src={
+                        vehicle.id === 'veh-swift-dzire' &&
+                        vehicle.image.includes('luxury_sedan_fleet')
+                          ? '/assets/aistudio/image_70ad8917.png'
+                          : vehicle.id === 'veh-honda-city' &&
+                            vehicle.image.includes('luxury_sedan_fleet')
+                          ? '/assets/aistudio/image_a6df10e7.png'
+                          : vehicle.id === 'veh-indica' &&
+                            vehicle.image.includes('hero_toyota_fortuner')
+                          ? '/assets/aistudio/image_c332a07e.png'
+                          : vehicle.id === 'veh-indigo' &&
+                            vehicle.image.includes('luxury_sedan_fleet')
+                          ? '/assets/aistudio/image_1c7fd3d7.png'
+                          : vehicle.id === 'veh-ambassador' &&
+                            vehicle.image.includes('wedding_luxury_car')
+                          ? '/assets/aistudio/image_6d31e660.png'
+                          : vehicle.id === 'veh-corolla-altis' &&
+                            vehicle.image.includes('luxury_sedan_fleet')
+                          ? '/assets/aistudio/image_3101aa88.png'
+                          : vehicle.id === 'veh-toyota-camry' &&
+                            vehicle.image.includes('chauffeur_corporate')
+                          ? '/assets/aistudio/image_ed2144e1.png'
+                          : vehicle.id === 'veh-skoda' &&
+                            vehicle.image.includes('luxury_sedan_fleet')
+                          ? '/assets/aistudio/image_94caf68d.png'
+                          : vehicle.id === 'veh-toyota-fortuner' &&
+                            vehicle.image.includes('hero_toyota_fortuner')
+                          ? '/assets/aistudio/image_00ff5c77.png'
+                          : vehicle.id === 'veh-toyota-innova' &&
+                            vehicle.image.includes('hero_toyota_fortuner')
+                          ? '/assets/aistudio/image_c0cbfdb2.png'
+                          : vehicle.id === 'veh-mahindra-scorpio' &&
+                            vehicle.image.includes('hero_toyota_fortuner')
+                          ? '/assets/aistudio/image_0f48c577.png'
+                          : vehicle.id === 'veh-mahindra-xuv' &&
+                            vehicle.image.includes('hero_toyota_fortuner')
+                          ? '/assets/aistudio/image_92ea1bb8.png'
+                          : vehicle.id === 'veh-tata-sumo' &&
+                            vehicle.image.includes('hero_toyota_fortuner')
+                          ? '/assets/aistudio/image_51f7c63e.png'
+                          : vehicle.image
+                      }
                       alt={vehicle.name}
                       className="w-full h-full object-cover"
                     />
@@ -1952,7 +1993,48 @@ export const FleetPage: React.FC = () => {
 
             <div className="aspect-16/9 bg-neutral-900">
               <ResilientImage
-                src={detailVehicle.image}
+                src={
+                  detailVehicle.id === 'veh-swift-dzire' &&
+                  detailVehicle.image.includes('luxury_sedan_fleet')
+                    ? '/assets/aistudio/image_70ad8917.png'
+                    : detailVehicle.id === 'veh-honda-city' &&
+                      detailVehicle.image.includes('luxury_sedan_fleet')
+                    ? '/assets/aistudio/image_a6df10e7.png'
+                    : detailVehicle.id === 'veh-indica' &&
+                      detailVehicle.image.includes('hero_toyota_fortuner')
+                    ? '/assets/aistudio/image_c332a07e.png'
+                    : detailVehicle.id === 'veh-indigo' &&
+                      detailVehicle.image.includes('luxury_sedan_fleet')
+                    ? '/assets/aistudio/image_1c7fd3d7.png'
+                    : detailVehicle.id === 'veh-ambassador' &&
+                      detailVehicle.image.includes('wedding_luxury_car')
+                    ? '/assets/aistudio/image_6d31e660.png'
+                    : detailVehicle.id === 'veh-corolla-altis' &&
+                      detailVehicle.image.includes('luxury_sedan_fleet')
+                    ? '/assets/aistudio/image_3101aa88.png'
+                    : detailVehicle.id === 'veh-toyota-camry' &&
+                      detailVehicle.image.includes('chauffeur_corporate')
+                    ? '/assets/aistudio/image_ed2144e1.png'
+                    : detailVehicle.id === 'veh-skoda' &&
+                      detailVehicle.image.includes('luxury_sedan_fleet')
+                    ? '/assets/aistudio/image_94caf68d.png'
+                    : detailVehicle.id === 'veh-toyota-fortuner' &&
+                      detailVehicle.image.includes('hero_toyota_fortuner')
+                    ? '/assets/aistudio/image_00ff5c77.png'
+                    : detailVehicle.id === 'veh-toyota-innova' &&
+                      detailVehicle.image.includes('hero_toyota_fortuner')
+                    ? '/assets/aistudio/image_c0cbfdb2.png'
+                    : detailVehicle.id === 'veh-mahindra-scorpio' &&
+                      detailVehicle.image.includes('hero_toyota_fortuner')
+                    ? '/assets/aistudio/image_0f48c577.png'
+                    : detailVehicle.id === 'veh-mahindra-xuv' &&
+                      detailVehicle.image.includes('hero_toyota_fortuner')
+                    ? '/assets/aistudio/image_92ea1bb8.png'
+                    : detailVehicle.id === 'veh-tata-sumo' &&
+                      detailVehicle.image.includes('hero_toyota_fortuner')
+                    ? '/assets/aistudio/image_51f7c63e.png'
+                    : detailVehicle.image
+                }
                 alt={detailVehicle.name}
                 className="w-full h-full object-cover"
               />

@@ -301,7 +301,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Popular compact sedan ideal for Kolkata local city packages (₹4,000 for 10 Hrs / 100 Km), railway transfers, and outstation journeys.',
     highlights: ['Local 10Hr/100Km Base: ₹4,000', 'Chauffeur Driven', 'Airport & City Transfers'],
-    image: ASSET_IMAGES.luxurySedans,
+    image: '/assets/aistudio/image_70ad8917.png',
     serviceId: 'service-premium-car',
     active: true,
   },
@@ -314,7 +314,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Refined and comfortable sedan suited for corporate executives, airport pickups, and smooth highway travel.',
     highlights: ['Spacious Rear Cabin', 'Chauffeur Driven', 'Business & Personal Travel'],
-    image: ASSET_IMAGES.luxurySedans,
+    image: '/assets/aistudio/image_a6df10e7.png',
     serviceId: 'service-premium-car',
     active: true,
   },
@@ -327,7 +327,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Economical hatchback option for local city errands, point-to-point drops, and daily Kolkata commutes.',
     highlights: ['Budget Friendly', 'City Point-to-Point', 'Chauffeur Driven'],
-    image: ASSET_IMAGES.fortunerHero,
+    image: '/assets/aistudio/image_c332a07e.png',
     serviceId: 'service-premium-car',
     active: true,
   },
@@ -340,7 +340,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Dependable entry-level sedan for railway station transfers, local duty, and short outstation trips.',
     highlights: ['Practical Boot Space', 'Local & Outstation', 'Chauffeur Driven'],
-    image: ASSET_IMAGES.luxurySedans,
+    image: '/assets/aistudio/image_1c7fd3d7.png',
     serviceId: 'service-premium-car',
     active: true,
   },
@@ -353,7 +353,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Iconic heritage Kolkata sedan cherished for classic city tours, official protocol travel, and traditional occasions.',
     highlights: ['Classic Heritage Ride', 'Generous Rear Seat Comfort', 'Protocol & City Tours'],
-    image: ASSET_IMAGES.weddingCar,
+    image: '/assets/aistudio/image_6d31e660.png',
     serviceId: 'service-premium-car',
     active: true,
   },
@@ -368,7 +368,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Executive sedan offering plush ride quality for corporate guests, conferences, and local packages.',
     highlights: ['Executive Sedan Package: ₹6,500 – ₹8,000', 'VIP Corporate Transit', 'Chauffeur Driven'],
-    image: ASSET_IMAGES.luxurySedans,
+    image: '/assets/aistudio/image_3101aa88.png',
     serviceId: 'service-corporate',
     active: true,
   },
@@ -381,7 +381,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Flagship executive saloon delivering whisper-quiet cabin comfort for senior executives and dignitaries.',
     highlights: ['Executive Sedan Package: ₹6,500 – ₹8,000', 'Diplomats & CXO Travel', 'Chauffeur Driven'],
-    image: ASSET_IMAGES.chauffeurCorporate,
+    image: '/assets/aistudio/image_ed2144e1.png',
     serviceId: 'service-corporate',
     active: true,
   },
@@ -394,7 +394,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'European executive styling ideal for both corporate bookings and elegant wedding car arrangements.',
     highlights: ['Executive Sedan Package: ₹6,500 – ₹8,000', 'Wedding & Corporate Ready', 'Chauffeur Driven'],
-    image: ASSET_IMAGES.luxurySedans,
+    image: '/assets/aistudio/image_94caf68d.png',
     serviceId: 'service-premium-car',
     active: true,
   },
@@ -409,7 +409,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Commanding luxury SUV with bold road presence for VIP movement, corporate roadshows, and highway journeys.',
     highlights: ['Custom / Route Based Tariff', 'Commanding Road Presence', 'Local & Outstation'],
-    image: ASSET_IMAGES.fortunerHero,
+    image: '/assets/aistudio/image_00ff5c77.png',
     serviceId: 'service-luxury-car',
     active: true,
   },
@@ -422,7 +422,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'India’s most trusted MUV for long-distance outstation family travel to Digha, Mandarmani, Puri, and Tarapith.',
     highlights: ['Custom / Route Based Tariff', 'Outstation & Airport Favorite', 'Chauffeur Driven'],
-    image: ASSET_IMAGES.fortunerHero,
+    image: '/assets/aistudio/image_c0cbfdb2.png',
     serviceId: 'service-premium-car',
     active: true,
   },
@@ -435,7 +435,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Rugged and dependable SUV built for outstation routes, site visits, and group travel across West Bengal.',
     highlights: ['Custom / Route Based Tariff', 'Sturdy Highway Cruiser', 'Chauffeur Driven'],
-    image: ASSET_IMAGES.fortunerHero,
+    image: '/assets/aistudio/image_0f48c577.png',
     serviceId: 'service-corporate',
     active: true,
   },
@@ -448,7 +448,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Modern feature-rich SUV suitable for family vacations, executive highway travel, and event delegations.',
     highlights: ['Custom / Route Based Tariff', 'Modern Cabin Comfort', 'Chauffeur Driven'],
-    image: ASSET_IMAGES.fortunerHero,
+    image: '/assets/aistudio/image_92ea1bb8.png',
     serviceId: 'service-premium-car',
     active: true,
   },
@@ -461,7 +461,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Practical multi-utility vehicle for project teams, institutional transport, and regional travel.',
     highlights: ['Custom / Route Based Tariff', 'Institutional & Team Transit', 'Chauffeur Driven'],
-    image: ASSET_IMAGES.fortunerHero,
+    image: '/assets/aistudio/image_51f7c63e.png',
     serviceId: 'service-corporate',
     active: true,
   },

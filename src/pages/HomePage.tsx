@@ -7,21 +7,19 @@ import {
   Car,
   CheckCircle2,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ChevronUp,
   Clock,
   Headphones,
   MapPin,
   MessageCircle,
   Shield,
-  Star,
   Users,
 } from 'lucide-react';
 import { ResilientImage } from '../components/ResilientImage';
 import { BookACallButton } from '../components/ui/book-a-call-button';
+import { HorizontalCarousel } from '../components/ui/horizontal-carousel';
 import { useApp } from '../context/AppContext';
-import { ASSET_IMAGES, POPULAR_DESTINATIONS, SAMPLE_TESTIMONIALS } from '../data/initialData';
+import { ASSET_IMAGES, POPULAR_DESTINATIONS } from '../data/initialData';
 import { EnquiryRecord } from '../types';
 
 export const HomePage: React.FC = () => {
@@ -38,12 +36,10 @@ export const HomePage: React.FC = () => {
   const [heroPaused, setHeroPaused] = useState(false);
   const [wheelStep, setWheelStep] = useState(0);
   const [wheelDirection, setWheelDirection] = useState<1 | -1>(1);
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
   const wheelContainerRef = useRef<HTMLDivElement | null>(null);
   const lastWheelTimeRef = useRef<number>(0);
   const touchStartYRef = useRef<number | null>(null);
   const heroTouchStartXRef = useRef<number | null>(null);
-  const testimonialTouchStartXRef = useRef<number | null>(null);
 
   const rotateWheel = useCallback((delta: number) => {
     if (delta === 0) return;
@@ -1015,90 +1011,7 @@ export const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div
-            onTouchStart={(e) => {
-              testimonialTouchStartXRef.current = e.touches[0].clientX;
-            }}
-            onTouchEnd={(e) => {
-              if (testimonialTouchStartXRef.current === null) return;
-              const dx = testimonialTouchStartXRef.current - e.changedTouches[0].clientX;
-              testimonialTouchStartXRef.current = null;
-              if (Math.abs(dx) > 36) {
-                setActiveTestimonial((prev) =>
-                  dx > 0
-                    ? (prev + 1) % SAMPLE_TESTIMONIALS.length
-                    : (prev - 1 + SAMPLE_TESTIMONIALS.length) % SAMPLE_TESTIMONIALS.length
-                );
-              }
-            }}
-            className="bg-white rounded-2xl p-6 sm:p-8 md:p-10 border border-neutral-200 shadow-sm relative"
-          >
-            <div className="flex items-center gap-1 text-[#E9AD18] mb-4">
-              {Array.from({ length: SAMPLE_TESTIMONIALS[activeTestimonial].rating }).map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-current" />
-              ))}
-              <span className="ml-2 text-xs text-neutral-500 font-medium">
-                · Sample Placeholder Review
-              </span>
-            </div>
-
-            <blockquote className="text-base md:text-lg text-[#151515] font-medium leading-relaxed mb-6">
-              “{SAMPLE_TESTIMONIALS[activeTestimonial].comment}”
-            </blockquote>
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-neutral-100">
-              <div>
-                <p className="font-display font-bold text-sm text-[#151515]">
-                  {SAMPLE_TESTIMONIALS[activeTestimonial].name}
-                </p>
-                <p className="text-xs text-[#777777]">
-                  {SAMPLE_TESTIMONIALS[activeTestimonial].role}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between sm:justify-end gap-3">
-                <div className="flex items-center gap-1.5">
-                  {SAMPLE_TESTIMONIALS.map((t, idx) => (
-                    <button
-                      key={t.name}
-                      type="button"
-                      onClick={() => setActiveTestimonial(idx)}
-                      aria-label={`View testimonial ${idx + 1}`}
-                      className={`h-2 rounded-full transition-all cursor-pointer ${
-                        activeTestimonial === idx
-                          ? 'w-6 bg-[#151515]'
-                          : 'w-2 bg-neutral-300 hover:bg-neutral-400'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setActiveTestimonial(
-                        (prev) => (prev - 1 + SAMPLE_TESTIMONIALS.length) % SAMPLE_TESTIMONIALS.length
-                      )
-                    }
-                    aria-label="Previous testimonial"
-                    className="w-11 h-11 sm:w-9 sm:h-9 rounded-lg border border-neutral-300 hover:bg-[#151515] hover:text-[#FFD21F] active:scale-95 transition-all cursor-pointer flex items-center justify-center"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setActiveTestimonial((prev) => (prev + 1) % SAMPLE_TESTIMONIALS.length)
-                    }
-                    aria-label="Next testimonial"
-                    className="w-11 h-11 sm:w-9 sm:h-9 rounded-lg border border-neutral-300 hover:bg-[#151515] hover:text-[#FFD21F] active:scale-95 transition-all cursor-pointer flex items-center justify-center"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <HorizontalCarousel />
         </div>
       </section>
 

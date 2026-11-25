@@ -1897,6 +1897,39 @@ export const FleetPage: React.FC = () => {
                           : vehicle.id === 'veh-tata-sumo' &&
                             vehicle.image.includes('hero_toyota_fortuner')
                           ? '/assets/aistudio/image_51f7c63e.png'
+                          : vehicle.id === 'veh-bmw-5' &&
+                            vehicle.image.includes('luxury_sedan_fleet')
+                          ? '/assets/aistudio/image_feade70a.png'
+                          : vehicle.id === 'veh-bmw-7' &&
+                            vehicle.image.includes('chauffeur_corporate')
+                          ? '/assets/aistudio/image_e19f0dc3.png'
+                          : vehicle.id === 'veh-audi-a6' &&
+                            vehicle.image.includes('wedding_luxury_car')
+                          ? '/assets/aistudio/image_398dea8c.png'
+                          : vehicle.id === 'veh-audi-q7' &&
+                            vehicle.image.includes('hero_toyota_fortuner')
+                          ? '/assets/aistudio/image_04bd00bf.png'
+                          : vehicle.id === 'veh-mercedes-e' &&
+                            vehicle.image.includes('luxury_sedan_fleet')
+                          ? '/assets/aistudio/image_df088aa8.png'
+                          : vehicle.id === 'veh-tata-winger-13' &&
+                            vehicle.image.includes('tempo_traveller_minibus')
+                          ? '/assets/aistudio/image_4b5cdf9e.png'
+                          : vehicle.id === 'veh-tempo-16' &&
+                            vehicle.image.includes('tempo_traveller_minibus')
+                          ? '/assets/aistudio/image_2fc1c1f8.png'
+                          : vehicle.id === 'veh-tempo-20' &&
+                            vehicle.image.includes('tempo_traveller_minibus')
+                          ? '/assets/aistudio/image_fcc271c7.png'
+                          : vehicle.id === 'veh-tempo-26' &&
+                            vehicle.image.includes('tempo_traveller_minibus')
+                          ? '/assets/aistudio/image_81723eae.png'
+                          : vehicle.id === 'veh-volvo-coach' &&
+                            vehicle.image.includes('luxury_volvo_coach')
+                          ? '/assets/aistudio/image_af55a98c.png'
+                          : vehicle.id === 'veh-luxury-coach' &&
+                            vehicle.image.includes('luxury_volvo_coach')
+                          ? '/assets/aistudio/image_00d62a8d.png'
                           : vehicle.image
                       }
                       alt={vehicle.name}
@@ -2033,6 +2066,39 @@ export const FleetPage: React.FC = () => {
                     : detailVehicle.id === 'veh-tata-sumo' &&
                       detailVehicle.image.includes('hero_toyota_fortuner')
                     ? '/assets/aistudio/image_51f7c63e.png'
+                    : detailVehicle.id === 'veh-bmw-5' &&
+                      detailVehicle.image.includes('luxury_sedan_fleet')
+                    ? '/assets/aistudio/image_feade70a.png'
+                    : detailVehicle.id === 'veh-bmw-7' &&
+                      detailVehicle.image.includes('chauffeur_corporate')
+                    ? '/assets/aistudio/image_e19f0dc3.png'
+                    : detailVehicle.id === 'veh-audi-a6' &&
+                      detailVehicle.image.includes('wedding_luxury_car')
+                    ? '/assets/aistudio/image_398dea8c.png'
+                    : detailVehicle.id === 'veh-audi-q7' &&
+                      detailVehicle.image.includes('hero_toyota_fortuner')
+                    ? '/assets/aistudio/image_04bd00bf.png'
+                    : detailVehicle.id === 'veh-mercedes-e' &&
+                      detailVehicle.image.includes('luxury_sedan_fleet')
+                    ? '/assets/aistudio/image_df088aa8.png'
+                    : detailVehicle.id === 'veh-tata-winger-13' &&
+                      detailVehicle.image.includes('tempo_traveller_minibus')
+                    ? '/assets/aistudio/image_4b5cdf9e.png'
+                    : detailVehicle.id === 'veh-tempo-16' &&
+                      detailVehicle.image.includes('tempo_traveller_minibus')
+                    ? '/assets/aistudio/image_2fc1c1f8.png'
+                    : detailVehicle.id === 'veh-tempo-20' &&
+                      detailVehicle.image.includes('tempo_traveller_minibus')
+                    ? '/assets/aistudio/image_fcc271c7.png'
+                    : detailVehicle.id === 'veh-tempo-26' &&
+                      detailVehicle.image.includes('tempo_traveller_minibus')
+                    ? '/assets/aistudio/image_81723eae.png'
+                    : detailVehicle.id === 'veh-volvo-coach' &&
+                      detailVehicle.image.includes('luxury_volvo_coach')
+                    ? '/assets/aistudio/image_af55a98c.png'
+                    : detailVehicle.id === 'veh-luxury-coach' &&
+                      detailVehicle.image.includes('luxury_volvo_coach')
+                    ? '/assets/aistudio/image_00d62a8d.png'
                     : detailVehicle.image
                 }
                 alt={detailVehicle.name}

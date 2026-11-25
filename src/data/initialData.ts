@@ -476,7 +476,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Dynamic luxury business sedan combining executive prestige with supreme rear-seat comfort.',
     highlights: ['Luxury Package: ₹16,000 – ₹24,000', 'VIP & Wedding Favourite', 'Uniformed Chauffeur'],
-    image: ASSET_IMAGES.luxurySedans,
+    image: '/assets/aistudio/image_feade70a.png',
     serviceId: 'service-luxury-car',
     active: true,
   },
@@ -489,7 +489,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Pinnacle flagship luxury limousine for celebrity guests, royal weddings, and diplomatic delegations.',
     highlights: ['Luxury Package: ₹16,000 – ₹24,000', 'Flagship Luxury Limousine', 'Uniformed Chauffeur'],
-    image: ASSET_IMAGES.chauffeurCorporate,
+    image: '/assets/aistudio/image_e19f0dc3.png',
     serviceId: 'service-luxury-car',
     active: true,
   },
@@ -502,7 +502,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Sophisticated German luxury sedan highly sought-after for grand bridal and groom wedding entries and VIP transfers.',
     highlights: ['Luxury Package: ₹16,000 – ₹24,000', 'Bridal & Groom Entry Choice', 'Uniformed Chauffeur'],
-    image: ASSET_IMAGES.weddingCar,
+    image: '/assets/aistudio/image_398dea8c.png',
     serviceId: 'service-wedding-car',
     active: true,
   },
@@ -515,7 +515,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Full-size luxury quattro SUV offering commanding presence and first-class comfort for special occasions.',
     highlights: ['Luxury Package: ₹16,000 – ₹24,000', 'Full-Size Luxury SUV', 'Uniformed Chauffeur'],
-    image: ASSET_IMAGES.fortunerHero,
+    image: '/assets/aistudio/image_04bd00bf.png',
     serviceId: 'service-luxury-car',
     active: true,
   },
@@ -528,7 +528,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'The gold standard of chauffeur-driven luxury sedans in Kolkata for corporate leaders and milestone events.',
     highlights: ['Luxury Package: ₹16,000 – ₹24,000', 'Signature Rear Lounge', 'Uniformed Chauffeur'],
-    image: ASSET_IMAGES.luxurySedans,
+    image: '/assets/aistudio/image_df088aa8.png',
     serviceId: 'service-luxury-car',
     active: true,
   },
@@ -543,7 +543,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Compact 13-seater passenger van ideal for airport group transfers, family pilgrimages, and city sightseeing.',
     highlights: ['Confirmed 13 Seater Capacity', 'High Roof Cabin', 'Contact for Tariff'],
-    image: ASSET_IMAGES.tempoTraveller,
+    image: '/assets/aistudio/image_4b5cdf9e.png',
     serviceId: 'service-mini-bus',
     active: true,
   },
@@ -556,7 +556,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Spacious 16-seater Tempo Traveller with pushback seats and ample luggage carrier for outstation group tours.',
     highlights: ['Confirmed 16 Seater Capacity', 'AC & Non-AC Available', 'Contact for Tariff'],
-    image: ASSET_IMAGES.tempoTraveller,
+    image: '/assets/aistudio/image_2fc1c1f8.png',
     serviceId: 'service-mini-bus',
     active: true,
   },
@@ -569,7 +569,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Mid-sized 20-seater Tempo Traveller engineered for corporate team outings, wedding guest movement, and tours.',
     highlights: ['Confirmed 20 Seater Capacity', 'AC & Non-AC Available', 'Contact for Tariff'],
-    image: ASSET_IMAGES.tempoTraveller,
+    image: '/assets/aistudio/image_fcc271c7.png',
     serviceId: 'service-mini-bus',
     active: true,
   },
@@ -582,7 +582,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Large 26-seater Tempo Traveller minibus for extended families, institutional excursions, and event delegations.',
     highlights: ['Confirmed 26 Seater Capacity', 'AC & Non-AC Available', 'Contact for Tariff'],
-    image: ASSET_IMAGES.tempoTraveller,
+    image: '/assets/aistudio/image_81723eae.png',
     serviceId: 'service-mini-bus',
     active: true,
   },
@@ -595,7 +595,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Premium Chartered AC Volvo Sleeper and Semi-Sleeper coaches with air suspension for long-distance luxury group travel.',
     highlights: ['Accommodates up to 50 Passengers', 'Air-Conditioned Travel', 'Contact for Tariff'],
-    image: ASSET_IMAGES.volvoCoach,
+    image: '/assets/aistudio/image_af55a98c.png',
     serviceId: 'service-luxury-coach',
     active: true,
   },
@@ -608,7 +608,7 @@ export const INITIAL_VEHICLES: VehicleItem[] = [
     shortDescription:
       'Mid-size luxury coaches and capsule buses tailored for corporate conferences, destination weddings, and excursions.',
     highlights: ['Accommodates up to 50 Passengers', 'Spacious Seating Arrangements', 'Contact for Tariff'],
-    image: ASSET_IMAGES.volvoCoach,
+    image: '/assets/aistudio/image_00d62a8d.png',
     serviceId: 'service-luxury-coach',
     active: true,
   },

@@ -476,15 +476,38 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                   {relatedVehicles.map((v) => {
                     const isFortuner =
                       v.id === 'veh-toyota-fortuner' || v.name === 'Toyota Fortuner';
+                    const isBmw5Series =
+                      v.id === 'veh-bmw-5' || v.name === 'BMW 5 Series';
+                    const isBmw7Series =
+                      v.id === 'veh-bmw-7' || v.name === 'BMW 7 Series';
+                    const isAudiQ7 =
+                      v.id === 'veh-audi-q7' || v.name === 'Audi Q7';
+                    const isAudiA6 =
+                      v.id === 'veh-audi-a6' || v.name === 'Audi A6';
+                    const isMercedesEClass =
+                      v.id === 'veh-mercedes-e' || v.name === 'Mercedes-Benz E-Class';
+                    const cardBgImage = isFortuner
+                      ? '/assets/aistudio/image_00ff5c77.png'
+                      : isBmw5Series
+                      ? '/assets/aistudio/ALUMINIUM_SATINATED_ALU_SATIN_G68_AL_SA_7_3to2_12ca8a91.webp'
+                      : isBmw7Series
+                      ? '/assets/aistudio/g70_lci_ice_further_topics_bmw_service_3to2_7f67b7fc.webp'
+                      : isAudiQ7
+                      ? '/assets/aistudio/front-left-side-47_ab06d2ca.jpg'
+                      : isAudiA6
+                      ? '/assets/aistudio/v3_xWTXWhbdRjG__66ri45SXpSkzbpsUdzzskKki1NT9MWja5jyIQVS2crOEf4NzlN0-bL5KRmVHAI4kDwyjkGwrzQDe2ECiqOORAmDioW1AtFFOqNKHQ3zo_NwfAU3ov34nkeXnh_z-WborvdFJw4fPlW_-299z-zjRCdhhBdG6LbbTcX6vcJIWbwlauy5BxcbjilflNmU07HTcn_cffb7fbd.jfif'
+                      : isMercedesEClass
+                      ? '/assets/aistudio/image_df088aa8.png'
+                      : null;
                     return (
                       <div
                         key={v.id}
                         className="rounded-xl border border-neutral-200 p-4 flex flex-col justify-between bg-white hover:border-[#FFD21F] transition-colors relative overflow-hidden"
                       >
-                        {isFortuner && (
+                        {cardBgImage && (
                           <>
                             <img
-                              src="/assets/aistudio/image_00ff5c77.png"
+                              src={cardBgImage}
                               alt=""
                               aria-hidden="true"
                               className="absolute inset-0 w-full h-full object-cover object-center opacity-45 pointer-events-none"

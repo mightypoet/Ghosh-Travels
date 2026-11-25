@@ -520,6 +520,11 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                       v.id === 'veh-toyota-innova' || v.name === 'Toyota Innova';
                     const isMahindraXuv =
                       v.id === 'veh-mahindra-xuv' || v.name === 'Mahindra XUV';
+                    const isVolvoCoach =
+                      v.id === 'veh-volvo-coach' || v.name === 'Chartered AC Volvo Coaches';
+                    const isLuxuryCoach =
+                      v.id === 'veh-luxury-coach' ||
+                      v.name === 'Capsule Buses & Luxury Coaches';
                     const cardBgImage = isFortuner
                       ? '/assets/aistudio/image_00ff5c77.png'
                       : isBmw5Series
@@ -556,6 +561,10 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                       ? '/assets/aistudio/front-left-side-47__3__39a5be50.jpg'
                       : isMahindraXuv
                       ? '/assets/aistudio/front-left-side-47__8__aed50c32.jpg'
+                      : isVolvoCoach
+                      ? '/assets/aistudio/image_af55a98c.png'
+                      : isLuxuryCoach
+                      ? '/assets/aistudio/bus4_a15ac31b.jpg'
                       : null;
                     return (
                       <div

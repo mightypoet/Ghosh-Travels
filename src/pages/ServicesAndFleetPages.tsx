@@ -486,6 +486,14 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                       v.id === 'veh-audi-a6' || v.name === 'Audi A6';
                     const isMercedesEClass =
                       v.id === 'veh-mercedes-e' || v.name === 'Mercedes-Benz E-Class';
+                    const isCorollaAltis =
+                      v.id === 'veh-corolla-altis' || v.name === 'Toyota Corolla Altis';
+                    const isToyotaCamry =
+                      v.id === 'veh-toyota-camry' || v.name === 'Toyota Camry';
+                    const isMahindraScorpio =
+                      v.id === 'veh-mahindra-scorpio' || v.name === 'Mahindra Scorpio';
+                    const isTataSumo =
+                      v.id === 'veh-tata-sumo' || v.name === 'Tata Sumo';
                     const cardBgImage = isFortuner
                       ? '/assets/aistudio/image_00ff5c77.png'
                       : isBmw5Series
@@ -498,6 +506,14 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                       ? '/assets/aistudio/v3_xWTXWhbdRjG__66ri45SXpSkzbpsUdzzskKki1NT9MWja5jyIQVS2crOEf4NzlN0-bL5KRmVHAI4kDwyjkGwrzQDe2ECiqOORAmDioW1AtFFOqNKHQ3zo_NwfAU3ov34nkeXnh_z-WborvdFJw4fPlW_-299z-zjRCdhhBdG6LbbTcX6vcJIWbwlauy5BxcbjilflNmU07HTcn_cffb7fbd.jfif'
                       : isMercedesEClass
                       ? '/assets/aistudio/image_df088aa8.png'
+                      : isCorollaAltis
+                      ? '/assets/aistudio/Toyota-Corolla-Altis-Right-Front-Three-Quarter-49079_ol_369911be.webp'
+                      : isToyotaCamry
+                      ? '/assets/aistudio/front-left-side-47__5__ecdb5eb1.jpg'
+                      : isMahindraScorpio
+                      ? '/assets/aistudio/61641581_d45036f9.jfif'
+                      : isTataSumo
+                      ? '/assets/aistudio/s4s0asa_1458924_bdd55680.webp'
                       : null;
                     return (
                       <div

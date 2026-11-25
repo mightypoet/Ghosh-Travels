@@ -494,6 +494,32 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                       v.id === 'veh-mahindra-scorpio' || v.name === 'Mahindra Scorpio';
                     const isTataSumo =
                       v.id === 'veh-tata-sumo' || v.name === 'Tata Sumo';
+                    const isSwiftDzire =
+                      v.id === 'veh-swift-dzire' ||
+                      v.name === 'Maruti Suzuki Swift Dzire' ||
+                      v.name === 'Swift Dzire';
+                    const isHondaCity =
+                      v.id === 'veh-honda-city' || v.name === 'Honda City';
+                    const isTataIndica =
+                      v.id === 'veh-indica' ||
+                      v.name === 'Tata Indica' ||
+                      v.name === 'Indica';
+                    const isTataIndigo =
+                      v.id === 'veh-indigo' ||
+                      v.name === 'Tata Indigo' ||
+                      v.name === 'Indigo';
+                    const isAmbassador =
+                      v.id === 'veh-ambassador' ||
+                      v.name === 'Hindustan Ambassador' ||
+                      v.name === 'Ambassador';
+                    const isSkoda =
+                      v.id === 'veh-skoda' ||
+                      v.name === 'Skoda Executive Sedan' ||
+                      v.name === 'Skoda';
+                    const isToyotaInnova =
+                      v.id === 'veh-toyota-innova' || v.name === 'Toyota Innova';
+                    const isMahindraXuv =
+                      v.id === 'veh-mahindra-xuv' || v.name === 'Mahindra XUV';
                     const cardBgImage = isFortuner
                       ? '/assets/aistudio/image_00ff5c77.png'
                       : isBmw5Series
@@ -514,6 +540,22 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                       ? '/assets/aistudio/61641581_d45036f9.jfif'
                       : isTataSumo
                       ? '/assets/aistudio/s4s0asa_1458924_bdd55680.webp'
+                      : isSwiftDzire
+                      ? '/assets/aistudio/front-left-side-47__2__dcd33949.jpg'
+                      : isHondaCity
+                      ? '/assets/aistudio/front-left-side-47__7__2fa2eb95.jpg'
+                      : isTataIndica
+                      ? '/assets/aistudio/front-left-side-47__6__1f9682ea.jpg'
+                      : isTataIndigo
+                      ? '/assets/aistudio/indigo-ecs-front-cross-side-view_640x480_1b4580bf.jpg'
+                      : isAmbassador
+                      ? '/assets/aistudio/The_Classic_Ambassador_on_an_early_sunrise_a2b5bbb1.jpg'
+                      : isSkoda
+                      ? '/assets/aistudio/109005443_8e766bc7.jfif'
+                      : isToyotaInnova
+                      ? '/assets/aistudio/front-left-side-47__3__39a5be50.jpg'
+                      : isMahindraXuv
+                      ? '/assets/aistudio/front-left-side-47__8__aed50c32.jpg'
                       : null;
                     return (
                       <div

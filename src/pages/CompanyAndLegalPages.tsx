@@ -25,6 +25,8 @@ import {
 import { ResilientImage } from '../components/ResilientImage';
 import { useApp } from '../context/AppContext';
 import { ASSET_IMAGES } from '../data/initialData';
+import regeneratedAboutFleetImg from '../assets/images/regenerated_image_1795817089621.png';
+import regeneratedAboutMgmtImg from '../assets/images/regenerated_image_1795817085006.png';
 import { sanitizeMediaUrl } from '../lib/supabase';
 import { BlogPost, EnquiryRecord, JobApplication, PageId } from '../types';
 
@@ -131,7 +133,7 @@ export const AboutPage: React.FC = () => {
           <div className="lg:col-span-6">
             <div className="rounded-2xl overflow-hidden border-2 border-[#FFD21F] shadow-xl aspect-16/10">
               <ResilientImage
-                src={ASSET_IMAGES.fortunerHero}
+                src={regeneratedAboutFleetImg}
                 alt="Ghosh Travels Fleet in Kolkata"
                 className="w-full h-full object-cover"
               />
@@ -147,7 +149,7 @@ export const AboutPage: React.FC = () => {
             <div className="lg:col-span-5">
               <div className="rounded-2xl overflow-hidden border border-neutral-300 shadow-lg aspect-4/3">
                 <ResilientImage
-                  src={ASSET_IMAGES.chauffeurCorporate}
+                  src={regeneratedAboutMgmtImg}
                   alt="Fleet Operations Management at Ghosh Travels"
                   className="w-full h-full object-cover"
                 />

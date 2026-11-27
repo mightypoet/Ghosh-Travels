@@ -289,9 +289,67 @@ function mapSupabaseBlog(row: Record<string, unknown>): BlogPost {
   };
 }
 
+const VALID_ROUTES: PageId[] = [
+  'about',
+  'services',
+  'service-luxury-coach',
+  'service-mini-bus',
+  'service-corporate',
+  'service-luxury-car',
+  'service-premium-car',
+  'service-wedding-car',
+  'fleet',
+  'tariff',
+  'booking',
+  'contact',
+  'career',
+  'blog',
+  'terms',
+  'privacy',
+  'disclaimer',
+  'refund',
+  'admin',
+];
+
+function parsePathname(pathname: string): { page: PageId; blogSlug: string | null } {
+  const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+  if (!normalized || normalized === '/') {
+    return { page: 'home', blogSlug: null };
+  }
+  if (normalized.startsWith('/blog/')) {
+    const rawSlug = normalized.slice('/blog/'.length);
+    try {
+      return { page: 'blog', blogSlug: decodeURIComponent(rawSlug) || null };
+    } catch {
+      return { page: 'blog', blogSlug: rawSlug || null };
+    }
+  }
+  const candidate = normalized.slice(1) as PageId;
+  if (VALID_ROUTES.includes(candidate)) {
+    return { page: candidate, blogSlug: null };
+  }
+  return { page: 'not-found', blogSlug: null };
+}
+
+function getPathForPage(page: PageId, blogSlug?: string | null): string {
+  if (page === 'home') return '/';
+  if (page === 'blog' && blogSlug) {
+    return `/blog/${encodeURIComponent(blogSlug)}`;
+  }
+  if (page === 'not-found') {
+    return typeof window !== 'undefined' ? window.location.pathname : '/404';
+  }
+  return `/${page}`;
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentPage, setCurrentPage] = useState<PageId>('home');
-  const [activeBlogSlug, setActiveBlogSlug] = useState<string | null>(null);
+  const [initialRoute] = useState(() =>
+    typeof window !== 'undefined'
+      ? parsePathname(window.location.pathname)
+      : { page: 'home' as PageId, blogSlug: null }
+  );
+  const [currentPage, setCurrentPage] = useState<PageId>(initialRoute.page);
+  const [activeBlogSlug, setActiveBlogSlug] = useState<string | null>(initialRoute.blogSlug);
   const [bookingPrefill, setBookingPrefill] = useState<BookingPrefill>({});
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
   const [enquiryModalPrefill, setEnquiryModalPrefill] = useState<BookingPrefill>({});
@@ -425,16 +483,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (ogDesc) ogDesc.setAttribute('content', seo.description);
   }, [currentPage]);
 
+  // Keep React state synced with browser Back/Forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const resolved = parsePathname(window.location.pathname);
+      setCurrentPage(resolved.page);
+      setActiveBlogSlug(resolved.blogSlug);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const navigate = (page: PageId, prefill?: BookingPrefill, blogSlug?: string) => {
     if (prefill) {
       setBookingPrefill(prefill);
     }
-    if (blogSlug !== undefined) {
-      setActiveBlogSlug(blogSlug || null);
-    } else if (page !== 'blog') {
-      setActiveBlogSlug(null);
-    }
+    const nextBlogSlug =
+      blogSlug !== undefined ? blogSlug || null : page !== 'blog' ? null : activeBlogSlug;
+    setActiveBlogSlug(nextBlogSlug);
     setCurrentPage(page);
+
+    if (typeof window !== 'undefined') {
+      const targetPath = getPathForPage(page, nextBlogSlug);
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ page, blogSlug: nextBlogSlug }, '', targetPath);
+      }
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

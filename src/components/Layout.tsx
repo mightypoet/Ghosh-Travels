@@ -9,7 +9,6 @@ import {
   Menu,
   MessageCircle,
   Phone,
-  ShieldCheck,
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -459,13 +458,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             >
               Vehicle Fleet
             </button>
-            <button
-              onClick={() => handleNavClick('admin')}
-              className="inline-flex items-center gap-1 text-neutral-600 hover:text-[#151515] transition-colors cursor-pointer"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#E9AD18]" />
-              <span>Admin Portal</span>
-            </button>
           </div>
         </div>
       </div>
@@ -695,12 +687,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             >
               Contact Us
             </button>
-            <button
-              onClick={() => handleNavClick('admin')}
-              className="block w-full text-left px-3 py-2.5 rounded-lg text-xs font-medium text-neutral-400 hover:bg-[#242424]"
-            >
-              Admin Dashboard
-            </button>
           </div>
         )}
       </header>
@@ -803,14 +789,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   className="hover:text-[#151515] hover:underline transition-colors cursor-pointer"
                 >
                   Contact Us
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleNavClick('admin')}
-                  className="text-neutral-500 hover:text-[#151515] hover:underline transition-colors cursor-pointer"
-                >
-                  Admin Dashboard
                 </button>
               </li>
             </ul>

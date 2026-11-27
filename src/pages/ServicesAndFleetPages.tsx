@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { ResilientImage } from '../components/ResilientImage';
 import { useApp } from '../context/AppContext';
+import { ASSET_IMAGES } from '../data/initialData';
+import regeneratedGalleryImg from '../assets/images/regenerated_image_1795816431904.png';
 import { EnquiryRecord, PageId, VehicleCategoryKey, VehicleItem } from '../types';
 
 export const ServicesMainPage: React.FC = () => {
@@ -448,7 +450,11 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                     className="rounded-xl overflow-hidden border border-neutral-200 aspect-4/3 bg-neutral-100"
                   >
                     <ResilientImage
-                      src={imgUrl}
+                      src={
+                        idx === 2 && imgUrl === ASSET_IMAGES.chauffeurCorporate
+                          ? regeneratedGalleryImg
+                          : imgUrl
+                      }
                       alt={`${service.title} Gallery Image ${idx + 1}`}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     />

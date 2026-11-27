@@ -712,17 +712,28 @@ export const CareerPage: React.FC = () => {
   const { jobs, submitJobApplication } = useApp();
   const activeJobs = jobs.filter((j) => j.active);
 
-  const [selectedJobId, setSelectedJobId] = useState<string>(
-    activeJobs[0]?.id || 'job-digital-marketing'
-  );
+  const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [applicantName, setApplicantName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [experienceYears, setExperienceYears] = useState('1 - 3 Years');
-  const [currentCity, setCurrentCity] = useState('Kolkata');
+  const [experienceYears, setExperienceYears] = useState('');
+  const [currentCity, setCurrentCity] = useState('');
   const [resumeFileName, setResumeFileName] = useState('');
   const [coverNote, setCoverNote] = useState('');
   const [submittedApp, setSubmittedApp] = useState<JobApplication | null>(null);
+
+  const careerPhoneDigits = phone.replace(/[\s\-+()]/g, '');
+  const isCareerEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+  const hasCareerPosition = selectedJobId.trim().length > 0;
+  const hasCareerFullName = hasCareerPosition && applicantName.trim().length > 0;
+  const hasCareerEmailAndPhone =
+    hasCareerFullName && isCareerEmailValid && careerPhoneDigits.length >= 10;
+  const hasCareerExpAndCity =
+    hasCareerEmailAndPhone &&
+    experienceYears.trim().length > 0 &&
+    currentCity.trim().length > 0;
+  const hasCareerResume = hasCareerExpAndCity && resumeFileName.trim().length > 0;
+  const hasCareerCoverNote = hasCareerResume && coverNote.trim().length > 0;
 
   const handleApply = (e: React.FormEvent) => {
     e.preventDefault();
@@ -876,13 +887,24 @@ export const CareerPage: React.FC = () => {
                 </div>
               ) : (
                 <form onSubmit={handleApply} className="space-y-4">
+                  {/* Step 1: Position Applied * */}
                   <div>
                     <label className="block text-xs text-neutral-300 mb-1">Position Applied *</label>
                     <select
+                      required
                       value={selectedJobId}
                       onChange={(e) => setSelectedJobId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
+                      className={`w-full px-3.5 py-2.5 rounded-lg text-xs transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                        selectedJobId === '' ? 'text-neutral-400' : 'text-white'
+                      } ${
+                        !hasCareerPosition
+                          ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                          : 'bg-[#242424] border border-neutral-700'
+                      }`}
                     >
+                      <option value="" disabled>
+                        Select Position *
+                      </option>
                       {activeJobs.map((j) => (
                         <option key={j.id} value={j.id}>
                           {j.title} (Sample Listing)
@@ -891,106 +913,218 @@ export const CareerPage: React.FC = () => {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-xs text-neutral-300 mb-1">Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={applicantName}
-                      onChange={(e) => setApplicantName(e.target.value)}
-                      placeholder="Applicant Full Name"
-                      className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                    />
-                  </div>
+                  {/* Step 2: Full Name * */}
+                  <AnimatePresence initial={false}>
+                    {hasCareerPosition && (
+                      <motion.div
+                        key="career-fullname-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <label className="block text-xs text-neutral-300 mb-1">Full Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={applicantName}
+                          onChange={(e) => setApplicantName(e.target.value)}
+                          placeholder="Applicant Full Name"
+                          className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasCareerFullName
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <label className="block text-xs text-neutral-300 mb-1">Email *</label>
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-neutral-300 mb-1">Phone *</label>
-                      <input
-                        type="tel"
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+91 98749 55056"
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                      />
-                    </div>
-                  </div>
+                  {/* Step 3: Email * & Phone * */}
+                  <AnimatePresence initial={false}>
+                    {hasCareerFullName && (
+                      <motion.div
+                        key="career-contact-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-xs text-neutral-300 mb-1">Email *</label>
+                            <input
+                              type="email"
+                              required
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="you@example.com"
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasCareerEmailAndPhone
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-neutral-300 mb-1">Phone *</label>
+                            <input
+                              type="tel"
+                              required
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              placeholder="+91 98749 55056"
+                              className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                                !hasCareerEmailAndPhone
+                                  ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                  : 'bg-[#242424] border border-neutral-700'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                        {((email.trim().length > 0 && !isCareerEmailValid) ||
+                          (phone.trim().length > 0 && careerPhoneDigits.length < 10)) && (
+                          <p className="mt-1.5 text-[11px] text-neutral-400">
+                            Enter a valid email address and 10-digit mobile number to continue.
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <label className="block text-xs text-neutral-300 mb-1">
-                        Total Experience
-                      </label>
-                      <input
-                        type="text"
-                        value={experienceYears}
-                        onChange={(e) => setExperienceYears(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-neutral-300 mb-1">Current City</label>
-                      <input
-                        type="text"
-                        value={currentCity}
-                        onChange={(e) => setCurrentCity(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#242424] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                      />
-                    </div>
-                  </div>
+                  {/* Step 4: Total Experience & Current City */}
+                  <AnimatePresence initial={false}>
+                    {hasCareerEmailAndPhone && (
+                      <motion.div
+                        key="career-exp-city-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3.5"
+                      >
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">
+                            Total Experience
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={experienceYears}
+                            onChange={(e) => setExperienceYears(e.target.value)}
+                            placeholder="e.g. 1 - 3 Years"
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              !hasCareerExpAndCity
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-300 mb-1">Current City</label>
+                          <input
+                            type="text"
+                            required
+                            value={currentCity}
+                            onChange={(e) => setCurrentCity(e.target.value)}
+                            placeholder="e.g. Kolkata"
+                            className={`w-full px-3.5 py-2.5 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                              !hasCareerExpAndCity
+                                ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                                : 'bg-[#242424] border border-neutral-700'
+                            }`}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                  <div>
-                    <label className="block text-xs text-neutral-300 mb-1">
-                      Upload Resume (PDF / DOC) *
-                    </label>
-                    <label className="flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#242424] border border-dashed border-neutral-600 hover:border-[#FFD21F] cursor-pointer text-xs text-neutral-300">
-                      <span className="truncate">
-                        {resumeFileName || 'Choose Resume File (.pdf, .docx)...'}
-                      </span>
-                      <Upload className="w-4 h-4 text-[#FFD21F] shrink-0 ml-2" />
-                      <input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) setResumeFileName(file.name);
-                        }}
-                      />
-                    </label>
-                  </div>
+                  {/* Step 5: Upload Resume (PDF / DOC) * */}
+                  <AnimatePresence initial={false}>
+                    {hasCareerExpAndCity && (
+                      <motion.div
+                        key="career-resume-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <label className="block text-xs text-neutral-300 mb-1">
+                          Upload Resume (PDF / DOC) *
+                        </label>
+                        <label
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-dashed cursor-pointer text-xs text-neutral-300 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] ${
+                            !hasCareerResume
+                              ? 'bg-[#1e1e1e] border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border-neutral-600'
+                          }`}
+                        >
+                          <span className="truncate">
+                            {resumeFileName || 'Choose Resume File (.pdf, .docx)...'}
+                          </span>
+                          <Upload className="w-4 h-4 text-[#FFD21F] shrink-0 ml-2" />
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) setResumeFileName(file.name);
+                            }}
+                          />
+                        </label>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                  <div>
-                    <label className="block text-xs text-neutral-300 mb-1">
-                      Cover Note / Experience Summary
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={coverNote}
-                      onChange={(e) => setCoverNote(e.target.value)}
-                      placeholder="Briefly describe your relevant experience..."
-                      className="w-full px-3.5 py-2 rounded-lg bg-[#242424] border border-neutral-700 text-xs text-white focus:outline-none focus:border-[#FFD21F]"
-                    />
-                  </div>
+                  {/* Step 6: Cover Note / Experience Summary */}
+                  <AnimatePresence initial={false}>
+                    {hasCareerResume && (
+                      <motion.div
+                        key="career-covernote-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <label className="block text-xs text-neutral-300 mb-1">
+                          Cover Note / Experience Summary
+                        </label>
+                        <textarea
+                          rows={3}
+                          required
+                          value={coverNote}
+                          onChange={(e) => setCoverNote(e.target.value)}
+                          placeholder="Briefly describe your relevant experience..."
+                          className={`w-full px-3.5 py-2 rounded-lg text-xs text-white placeholder-neutral-500 transition-all duration-200 hover:border-[#FFD21F] hover:bg-[#1e1e1e] hover:shadow-[0_0_0_3px_rgba(255,210,31,0.16)] focus:outline-none focus:border-[#FFD21F] focus:bg-[#1e1e1e] focus:shadow-[0_0_0_3px_rgba(255,210,31,0.22)] ${
+                            !hasCareerCoverNote
+                              ? 'bg-[#1e1e1e] border border-[#FFD21F]/70 shadow-[0_0_0_2px_rgba(255,210,31,0.1)]'
+                              : 'bg-[#242424] border border-neutral-700'
+                          }`}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-xs sm:text-sm cursor-pointer"
-                  >
-                    SUBMIT APPLICATION
-                  </button>
+                  {/* Step 7: SUBMIT APPLICATION */}
+                  <AnimatePresence initial={false}>
+                    {hasCareerCoverNote && (
+                      <motion.div
+                        key="career-submit-step"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        <button
+                          type="submit"
+                          className="w-full py-3.5 rounded-lg bg-[#FFD21F] hover:bg-[#E9AD18] text-[#151515] font-display font-bold text-xs sm:text-sm transition-colors cursor-pointer"
+                        >
+                          SUBMIT APPLICATION
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </form>
               )}
             </div>

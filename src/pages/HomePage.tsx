@@ -20,6 +20,7 @@ import { BookACallButton } from '../components/ui/book-a-call-button';
 import { HorizontalCarousel } from '../components/ui/horizontal-carousel';
 import { useApp } from '../context/AppContext';
 import { ASSET_IMAGES, POPULAR_DESTINATIONS } from '../data/initialData';
+import regeneratedWelcomeImg from '../assets/images/regenerated_image_1795808042205.png';
 import { EnquiryRecord } from '../types';
 
 export const HomePage: React.FC = () => {
@@ -202,7 +203,7 @@ export const HomePage: React.FC = () => {
       title: 'Luxury Cars',
       models: 'BMW 5/7 Series · Audi A6/Q7 · Mercedes E-Class',
       tariffHint: '₹16,000 – ₹24,000 (10 Hrs / 100 Km)',
-      image: ASSET_IMAGES.luxurySedans,
+      image: '/assets/aistudio/image_9ecb529f.png',
       serviceId: 'service-luxury-car' as const,
       categoryFilter: 'Luxury Cars',
     },
@@ -218,7 +219,7 @@ export const HomePage: React.FC = () => {
       title: 'SUVs and MUVs',
       models: 'Toyota Fortuner · Innova · Scorpio · XUV · Tata Sumo',
       tariffHint: 'Custom / Route Based Packages',
-      image: ASSET_IMAGES.fortunerHero,
+      image: '/assets/aistudio/Difference_Between_SUV__MUV_and_XUV_Cars_d4268fbe.jpg',
       serviceId: 'service-premium-car' as const,
       categoryFilter: 'SUVs & MUVs',
     },
@@ -753,7 +754,7 @@ export const HomePage: React.FC = () => {
             <div className="lg:col-span-6">
               <div className="rounded-2xl overflow-hidden shadow-xl border border-neutral-200 aspect-4/3 lg:aspect-5/4">
                 <ResilientImage
-                  src={ASSET_IMAGES.chauffeurCorporate}
+                  src={regeneratedWelcomeImg}
                   alt="Welcome to Ghosh Travels – Professional Chauffeur & Fleet Service in Kolkata"
                   className="w-full h-full object-cover"
                 />

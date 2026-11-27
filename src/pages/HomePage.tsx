@@ -22,6 +22,8 @@ import { useApp } from '../context/AppContext';
 import { ASSET_IMAGES, POPULAR_DESTINATIONS } from '../data/initialData';
 import regeneratedWelcomeImg from '../assets/images/regenerated_image_1795808042205.png';
 import regeneratedPremiumSedansImg from '../assets/images/regenerated_image_1795808904678.png';
+import regeneratedHeroFortunerImg from '../assets/images/regenerated_image_1795817323276.png';
+import regeneratedHeroLuxurySedansImg from '../assets/images/regenerated_image_1795817463953.png';
 import { EnquiryRecord } from '../types';
 
 export const HomePage: React.FC = () => {
@@ -362,7 +364,13 @@ export const HomePage: React.FC = () => {
                 className="relative w-full aspect-16/10 rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-[#151515]"
               >
                 <ResilientImage
-                  src={currentSlide.image}
+                  src={
+                    currentSlide.image === ASSET_IMAGES.fortunerHero
+                      ? regeneratedHeroFortunerImg
+                      : currentSlide.image === ASSET_IMAGES.luxurySedans
+                      ? regeneratedHeroLuxurySedansImg
+                      : currentSlide.image
+                  }
                   alt={`${currentSlide.headlineHighlight} ${currentSlide.headlineLine3} – Ghosh Travels Kolkata`}
                   className="w-full h-full object-cover"
                 />

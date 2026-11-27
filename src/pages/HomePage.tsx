@@ -21,6 +21,7 @@ import { HorizontalCarousel } from '../components/ui/horizontal-carousel';
 import { useApp } from '../context/AppContext';
 import { ASSET_IMAGES, POPULAR_DESTINATIONS } from '../data/initialData';
 import regeneratedWelcomeImg from '../assets/images/regenerated_image_1795808042205.png';
+import regeneratedPremiumSedansImg from '../assets/images/regenerated_image_1795808904678.png';
 import { EnquiryRecord } from '../types';
 
 export const HomePage: React.FC = () => {
@@ -211,7 +212,7 @@ export const HomePage: React.FC = () => {
       title: 'Premium Sedans',
       models: 'Swift Dzire · Honda City · Corolla Altis · Camry · Skoda',
       tariffHint: 'From ₹4,000 (10 Hrs / 100 Km)',
-      image: ASSET_IMAGES.chauffeurCorporate,
+      image: regeneratedPremiumSedansImg,
       serviceId: 'service-premium-car' as const,
       categoryFilter: 'Executive Sedans',
     },

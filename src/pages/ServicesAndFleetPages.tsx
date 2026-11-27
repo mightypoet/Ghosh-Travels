@@ -16,6 +16,9 @@ import {
 import { ResilientImage } from '../components/ResilientImage';
 import { useApp } from '../context/AppContext';
 import { ASSET_IMAGES } from '../data/initialData';
+import regeneratedHeroLuxuryImg from '../assets/images/regenerated_image_1795816813717.png';
+import regeneratedGallery1Img from '../assets/images/regenerated_image_1795816809302.png';
+import regeneratedGallery2Img from '../assets/images/regenerated_image_1795816818428.png';
 import regeneratedGalleryImg from '../assets/images/regenerated_image_1795816431904.png';
 import { EnquiryRecord, PageId, VehicleCategoryKey, VehicleItem } from '../types';
 
@@ -392,7 +395,11 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
             <div className="lg:col-span-5">
               <div className="rounded-2xl overflow-hidden border-2 border-[#FFD21F] shadow-2xl aspect-4/3">
                 <ResilientImage
-                  src={service.heroImage}
+                  src={
+                    service.heroImage === ASSET_IMAGES.luxurySedans
+                      ? regeneratedHeroLuxuryImg
+                      : service.heroImage
+                  }
                   alt={service.heroHeading}
                   className="w-full h-full object-cover"
                 />
@@ -451,7 +458,11 @@ export const ServiceDetailPage: React.FC<{ serviceId: PageId }> = ({ serviceId }
                   >
                     <ResilientImage
                       src={
-                        idx === 2 && imgUrl === ASSET_IMAGES.chauffeurCorporate
+                        idx === 0 && imgUrl === ASSET_IMAGES.luxurySedans
+                          ? regeneratedGallery1Img
+                          : idx === 1 && imgUrl === ASSET_IMAGES.fortunerHero
+                          ? regeneratedGallery2Img
+                          : idx === 2 && imgUrl === ASSET_IMAGES.chauffeurCorporate
                           ? regeneratedGalleryImg
                           : imgUrl
                       }
